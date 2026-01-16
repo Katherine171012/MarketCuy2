@@ -13,7 +13,7 @@
                 <strong>ID:</strong> {{ $productoEliminar->id_producto }}
             </li>
             <li class="list-group-item">
-                <strong>Descripción:</strong> {{ $productoEliminar->pro_descripcion }}
+                <strong>Nombre:</strong> {{ $productoEliminar->pro_nombre }}
             </li>
             <li class="list-group-item">
                 <strong>Precio:</strong> {{ $productoEliminar->pro_precio_venta }}

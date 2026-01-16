@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\UnidadMedida;
+use App\Models\Categoria;
 use Illuminate\Support\Facades\DB;
 
 class Producto extends Model
@@ -16,20 +17,34 @@ class Producto extends Model
 
     protected $fillable = [
         'id_producto',
+        'pro_nombre',
         'pro_descripcion',
         'pro_um_compra',
         'pro_um_venta',
         'pro_valor_compra',
         'pro_precio_venta',
+        'pro_precio_anterior',
         'pro_saldo_inicial',
         'pro_qty_ingresos',
         'pro_qty_egresos',
         'pro_qty_ajustes',
         'pro_saldo_final',
         'estado_prod',
-        'pro_categoria',
+        'id_categoria',
+        'pro_etiqueta',
+        'pro_es_destacado',
+        'pro_clicks_count',
         'pro_imagen',
     ];
+
+    public static function obtenerDestacados(int $limite = 4)
+    {
+        return self::where('estado_prod', 'ACT')
+            ->where('pro_es_destacado', true)
+            ->orderBy('pro_nombre', 'asc') // O random() si prefieres variedad
+            ->limit($limite)
+            ->get();
+    }
     public function unidadCompra()
     {
         return $this->belongsTo(
@@ -37,13 +52,6 @@ class Producto extends Model
             'pro_um_compra',
             'id_unidad_medida'
         );
-    }
-
-    public static function obtenerActivos()
-    {
-        return self::where('estado_prod', 'ACT')
-            ->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) ASC")
-            ->get();
     }
 
     public function unidadVenta()
@@ -54,13 +62,35 @@ class Producto extends Model
             'id_unidad_medida'
         );
     }
+
+    public function categoria()
+    {
+        return $this->belongsTo(
+            Categoria::class,
+            'id_categoria',
+            'id_categoria'
+        );
+    }
+
+    public static function obtenerActivos()
+    {
+        return self::where('estado_prod', 'ACT')
+            ->with('categoria')
+            ->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) ASC")
+            ->get();
+    }
+
     public static function queryActivos()
     {
-        return self::query()->whereIn('estado_prod', ['ACT', 'INA']);
+        return self::query()
+            ->whereIn('estado_prod', ['ACT', 'INA'])
+            ->with('categoria');
     }
+
     public static function obtenerParaLista(int $porPagina = 10)
     {
         return self::query()
+            ->with('categoria')
             ->orderByRaw("CASE
                 WHEN estado_prod = 'ACT' THEN 1
                 WHEN estado_prod = 'INA' THEN 2
@@ -68,32 +98,37 @@ class Producto extends Model
             ->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) ASC")
             ->paginate($porPagina);
     }
+
     public static function paginarActivos(int $perPage = 10)
     {
         return self::queryActivos()
             ->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) ASC")
             ->paginate($perPage);
     }
+
     public static function buscarPorId(?string $id): ?self
     {
         if (!$id) return null;
-        return self::find($id);
+        return self::with('categoria')->find($id);
     }
+
     public static function paginarActivosConFiltros(
         ?string $orden,
-        ?string $categoria,
+        ?string $idCategoria,
         ?string $unidad,
         int $perPage = 10
     ) {
         $query = self::queryActivos();
 
-        if ($categoria !== null && $categoria !== '') {
-            $query->where('pro_categoria', $categoria);
+        // ✅ Filtrar por FK id_categoria
+        if ($idCategoria !== null && $idCategoria !== '') {
+            $query->where('id_categoria', (int)$idCategoria);
         }
 
         if ($unidad !== null && $unidad !== '') {
             $query->where('pro_um_compra', $unidad);
         }
+
         $orden = ($orden !== null && $orden !== '') ? $orden : 'id_asc';
 
         switch ($orden) {
@@ -105,21 +140,27 @@ class Producto extends Model
                 $query->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) DESC");
                 break;
 
-            case 'desc_az':
-                $query->orderBy('pro_descripcion', 'ASC');
+            case 'nombre_az':
+                $query->orderBy('pro_nombre', 'ASC');
                 break;
 
-            case 'desc_za':
-                $query->orderBy('pro_descripcion', 'DESC');
+            case 'nombre_za':
+                $query->orderBy('pro_nombre', 'DESC');
                 break;
 
             default:
-                // lo manejas en controller con mensaje
                 return null;
         }
 
         return $query->paginate($perPage);
     }
+
+    public static function existeNombre(string $nombre): bool
+    {
+        return self::where('pro_nombre', $nombre)->exists();
+    }
+
+    // (Compatibilidad si en algún lado aún llaman esto)
     public static function existeDescripcion(string $desc): bool
     {
         return self::where('pro_descripcion', $desc)->exists();
@@ -145,17 +186,23 @@ class Producto extends Model
 
         return 'P' . ($max + 1);
     }
+
     public static function crearProducto(array $data)
     {
         $idProducto = $data['id_producto'] ?? self::generarSiguienteId();
 
         return self::create([
             'id_producto'       => $idProducto,
-            'pro_descripcion'   => $data['pro_descripcion'],
+            'pro_nombre'        => $data['pro_nombre'],
+            'pro_descripcion'   => $data['pro_descripcion'] ?? null,
+
             'pro_um_compra'     => $data['unidad_medida'],
             'pro_um_venta'      => $data['unidad_medida'],
+
             'pro_valor_compra'  => $data['pro_valor_compra'] ?? 0,
             'pro_precio_venta'  => $data['pro_precio_venta'],
+            'pro_precio_anterior' => $data['pro_precio_anterior'] ?? null,
+
             'pro_saldo_inicial' => $data['pro_saldo_inicial'],
 
             'pro_qty_ingresos'  => 0,
@@ -164,23 +211,32 @@ class Producto extends Model
 
             'pro_saldo_final'   => $data['pro_saldo_inicial'],
             'estado_prod'       => 'ACT',
-            'pro_categoria'     => $data['pro_categoria'] ?? null,
+
+            'id_categoria'      => (int) $data['id_categoria'],
+
+            'pro_etiqueta'      => $data['pro_etiqueta'] ?? null,
+            'pro_es_destacado'  => $data['pro_es_destacado'] ?? false,
+            'pro_clicks_count'  => $data['pro_clicks_count'] ?? 0,
+
             'pro_imagen'        => $data['pro_imagen'] ?? null,
         ]);
     }
+
     public function actualizarProducto(array $data)
     {
         return $this->update([
             'pro_valor_compra'  => $data['pro_valor_compra'] ?? $this->pro_valor_compra,
             'pro_precio_venta'  => $data['pro_precio_venta'],
-            'pro_saldo_inicial' => (int) $data['pro_saldo_inicial'],
+            'pro_precio_anterior' => $data['pro_precio_anterior'] ?? $this->pro_precio_anterior,
 
+            // stock fijo (no editable en UI), se mantiene por compatibilidad
+            'pro_saldo_inicial' => (int) $data['pro_saldo_inicial'],
             'pro_qty_ingresos'  => (int) $data['pro_qty_ingresos'],
             'pro_qty_egresos'   => (int) $data['pro_qty_egresos'],
             'pro_qty_ajustes'   => (int) $data['pro_qty_ajustes'],
-
             'pro_saldo_final'   => (int) $data['pro_saldo_final'],
-            'pro_categoria'     => $data['pro_categoria'] ?? $this->pro_categoria,
+
+            'id_categoria'      => isset($data['id_categoria']) ? (int)$data['id_categoria'] : $this->id_categoria,
         ]);
     }
 
@@ -188,6 +244,7 @@ class Producto extends Model
     {
         return $this->update(['estado_prod' => 'INA']);
     }
+
     public static function crearProductoTx(array $data)
     {
         try {
@@ -200,6 +257,7 @@ class Producto extends Model
             throw $e;
         }
     }
+
     public function actualizarProductoTx(array $data)
     {
         try {
@@ -212,6 +270,7 @@ class Producto extends Model
             throw $e;
         }
     }
+
     public function inactivarProductoTx()
     {
         try {

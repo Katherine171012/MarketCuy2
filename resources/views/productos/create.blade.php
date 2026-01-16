@@ -8,22 +8,24 @@
             @csrf
 
             <div class="mb-3">
-                <label class="form-label">Descripción</label>
+                <label class="form-label">Nombre</label>
                 <input type="text"
                        class="form-control"
-                       name="pro_descripcion"
-                       value="{{ old('pro_descripcion') }}"
+                       name="pro_nombre"
+                       value="{{ old('pro_nombre') }}"
                        required>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Categoría</label>
-                <select class="form-select" name="pro_categoria" required>
+                <select class="form-select" name="id_categoria" required>
                     <option value="">Seleccione categoría</option>
-                    <option value="Alimentos" {{ old('pro_categoria')=='Alimentos' ? 'selected' : '' }}>Alimentos</option>
-                    <option value="Medicinas" {{ old('pro_categoria')=='Medicinas' ? 'selected' : '' }}>Medicinas</option>
-                    <option value="Ropa"      {{ old('pro_categoria')=='Ropa' ? 'selected' : '' }}>Ropa</option>
-                    <option value="Otros"     {{ old('pro_categoria')=='Otros' ? 'selected' : '' }}>Otros</option>
+                    @foreach(($categorias ?? []) as $c)
+                        <option value="{{ $c->id_categoria }}"
+                            {{ old('id_categoria') == $c->id_categoria ? 'selected' : '' }}>
+                            {{ $c->cat_nombre }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
 
