@@ -118,7 +118,13 @@
                         </div>
                     </div>
 
-                    <button class="btn btn-concho product-btn py-3" type="button" disabled>
+                    <button id="btnAddToCart"
+                            type="button"
+                            class="btn btn-concho product-btn py-3"
+                            {{-- Aquí guardamos los datos que luego enviarás a Firebase --}}
+                            data-id="{{ $productoVer->id_producto }}"
+                            data-nombre="{{ $productoVer->pro_nombre }}"
+                            data-precio="{{ $productoVer->pro_precio_venta }}">
                         <i class="fa-solid fa-cart-shopping me-2"></i> Agregar al Carrito
                     </button>
                     <div class="text-muted small mt-2">
@@ -130,20 +136,57 @@
 
         <script>
             (function(){
+                // --- 1. Lógica de los botones + y - (Cantidad) ---
                 const qtyEl = document.getElementById('qty');
                 const btnMinus = document.getElementById('btnMinus');
                 const btnPlus = document.getElementById('btnPlus');
-                if(!qtyEl || !btnMinus || !btnPlus) return;
+                let cantidadActual = 1;
 
-                let q = 1;
-                btnMinus.addEventListener('click', () => {
-                    q = Math.max(1, q-1);
-                    qtyEl.textContent = q;
-                });
-                btnPlus.addEventListener('click', () => {
-                    q = q + 1;
-                    qtyEl.textContent = q;
-                });
+                if(qtyEl && btnMinus && btnPlus) {
+                    btnMinus.addEventListener('click', () => {
+                        cantidadActual = Math.max(1, cantidadActual - 1);
+                        qtyEl.textContent = cantidadActual;
+                    });
+                    btnPlus.addEventListener('click', () => {
+                        cantidadActual = cantidadActual + 1;
+                        qtyEl.textContent = cantidadActual;
+                    });
+                }
+
+                // --- 2. Lógica del Botón "Añadir al Carrito" ---
+                const btnAdd = document.getElementById('btnAddToCart');
+
+                if(btnAdd) {
+                    btnAdd.addEventListener('click', () => {
+
+                        // A) VERIFICAMOS SI EL USUARIO ESTÁ LOGUEADO
+                        const token = localStorage.getItem('auth_token');
+
+                        if (!token) {
+                            // SI NO TIENE TOKEN: Lo mandamos al Login
+                            const irAlLogin = confirm(" Debes iniciar sesión para comprar.\n\n¿Quieres ir al Login ahora?");
+
+                            if (irAlLogin) {
+                                // Redirigimos a la ruta raiz donde pusiste el login
+                                window.location.href = "{{ route('login') }}";
+                            }
+                            return; // Detenemos el código aquí.
+                        }
+
+                        // B) SI TIENE TOKEN: (Aquí irá la lógica de Firebase después)
+                        // Por ahora, solo simulamos que funciona.
+
+                        const producto = {
+                            id: btnAdd.getAttribute('data-id'),
+                            nombre: btnAdd.getAttribute('data-nombre'),
+                            precio: btnAdd.getAttribute('data-precio'),
+                            cantidad: cantidadActual
+                        };
+
+                        console.log("Usuario autenticado. Listo para enviar a Firebase:", producto);
+                        alert(` Producto listo para agregar al carrito (Firebase).\n\nUsuario autorizado.`);
+                    });
+                }
             })();
         </script>
 
