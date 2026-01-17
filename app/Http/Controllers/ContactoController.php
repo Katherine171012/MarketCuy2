@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Models\Contacto; // IMPORTANTE: Agregar esta línea
 
 class ContactoController extends Controller
 {
     public function index()
     {
-        // Solo muestra la vista
         return view('contacto.index');
     }
 
@@ -28,7 +28,17 @@ class ContactoController extends Controller
         // Generar referencia tipo: MC-2026-XXXXXX
         $ref = 'MC-' . now()->format('Y') . '-' . strtoupper(Str::random(6));
 
-        // Log dedicado: storage/logs/contacto.log
+        // ✅ GUARDAR EN BASE DE DATOS
+        Contacto::create([
+            'nombre'   => $data['con_nombre'],
+            'correo'   => $data['con_correo'],
+            'telefono' => $data['con_telefono'] ?? null,
+            'tipo'     => $data['con_tipo'],
+            'mensaje'  => $data['con_mensaje'],
+            'estado'   => 'pendiente', // o el valor por defecto que tengas
+        ]);
+
+        // Log adicional (opcional)
         $canal = Log::build([
             'driver' => 'single',
             'path' => storage_path('logs/contacto.log'),
