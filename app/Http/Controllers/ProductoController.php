@@ -29,7 +29,15 @@ class ProductoController extends Controller
             $perPage = 10;
         }
 
-        $productos = Producto::obtenerParaLista($perPage);
+        $catId = $request->get('categoria');
+
+        if ($catId) {
+            // Caso 1: Vienen del Home con una categoría seleccionada
+            $productos = Producto::paginarActivosConFiltros(null, $catId, null, $perPage);
+        } else {
+            // Caso 2: Entran normal al módulo (Tu lógica original intacta)
+            $productos = Producto::obtenerParaLista($perPage);
+        }
         $productos->appends($request->except('page'));
 
         $unidades = UnidadMedida::listar();
@@ -83,6 +91,7 @@ class ProductoController extends Controller
             'productoEliminar' => $productoEliminar,
             'productoVer' => $productoVer,
             'info' => $productos->count() === 0 ? $this->msg('M59') : null,
+            'categoriaSeleccionada' => $catId,
         ]);
     }
 

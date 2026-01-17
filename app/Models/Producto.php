@@ -23,7 +23,7 @@ class Producto extends Model
         'pro_um_venta',
         'pro_valor_compra',
         'pro_precio_venta',
-        'pro_precio_anterior',
+        'pro_precio_antes',
         'pro_saldo_inicial',
         'pro_qty_ingresos',
         'pro_qty_egresos',
@@ -36,6 +36,11 @@ class Producto extends Model
         'pro_clicks_count',
         'pro_imagen',
     ];
+    public function tieneDescuento(): bool
+    {
+        return $this->pro_precio_antes !== null
+            && $this->pro_precio_antes > $this->pro_precio_venta;
+    }
 
     public static function obtenerDestacados(int $limite = 4)
     {
@@ -201,7 +206,7 @@ class Producto extends Model
 
             'pro_valor_compra'  => $data['pro_valor_compra'] ?? 0,
             'pro_precio_venta'  => $data['pro_precio_venta'],
-            'pro_precio_anterior' => $data['pro_precio_anterior'] ?? null,
+            'pro_precio_antes' => $data['pro_precio_antes'] ?? null,
 
             'pro_saldo_inicial' => $data['pro_saldo_inicial'],
 
@@ -227,7 +232,7 @@ class Producto extends Model
         return $this->update([
             'pro_valor_compra'  => $data['pro_valor_compra'] ?? $this->pro_valor_compra,
             'pro_precio_venta'  => $data['pro_precio_venta'],
-            'pro_precio_anterior' => $data['pro_precio_anterior'] ?? $this->pro_precio_anterior,
+            'pro_precio_antes' => $data['pro_precio_antes'] ?? $this->pro_precio_antes,
 
             // stock fijo (no editable en UI), se mantiene por compatibilidad
             'pro_saldo_inicial' => (int) $data['pro_saldo_inicial'],
