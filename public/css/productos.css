@@ -247,6 +247,103 @@ body { background-color: #f7f7fb; }
 
 .footer-divider{ border-color:rgba(255,255,255,.12); }
 .footer-copy{ color:rgba(255,255,255,.60); }
+/* ========================================= */
+/* ESTILOS ESPECÍFICOS DE LA PORTADA (HOME)  */
+/* ========================================= */
+
+/* 1. Hero Gigante (Banner Principal) */
+.home-hero {
+    /* La imagen de fondo oscura */
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center;
+    min-height: 550px; /* Altura grande */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 3rem;
+    /* Ajuste para que ocupe todo el ancho si está dentro de un container */
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+}
+
+/* ========================================= */
+/* CATEGORÍAS COMPACTAS (RECTANGULARES)      */
+/* ========================================= */
+
+.cat-tile {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 140px; /* Altura fija: NO se hará gigante */
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    background-color: #6c757d; /* Fondo gris por si falla la foto */
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* La imagen llena el rectángulo */
+.cat-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+    opacity: 0.9;
+}
+
+/* Zoom suave al pasar el mouse */
+.cat-tile:hover img {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+/* Capa oscura para que se lea el texto */
+.cat-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.4); /* Oscurece la foto un 40% */
+    display: flex;
+    align-items: center;     /* Centrado vertical */
+    justify-content: center; /* Centrado horizontal */
+    padding: 10px;
+    transition: background 0.3s;
+}
+
+.cat-tile:hover .cat-overlay {
+    background: rgba(0,0,0,0.2); /* Se aclara un poco al pasar el mouse */
+}
+
+/* Texto */
+.cat-name {
+    color: white;
+    font-weight: 700;
+    font-size: 1rem; /* Letra no muy grande */
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    text-transform: uppercase;
+}
+/* 3. Etiquetas y Precios */
+.badge-oferta {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #dc3545; /* Rojo fuerte */
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 6px;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.precio-antes {
+    /* Estilo para el precio viejo tachado */
+    font-weight: 400;
+    color: #999;
+}
+
 /* =========================================================
    HERO CONTACTO – VERSIÓN ÚNICA Y FUNCIONAL
    ========================================================= */
