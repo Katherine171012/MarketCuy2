@@ -31,68 +31,65 @@ body { background-color: #f7f7fb; }
     border-color: var(--concho) !important;
 }
 
-/* Tablas (compatibilidad admin) */
-.table-custom thead th{
-    background-color: var(--concho) !important;
-    color: #fff !important;
-    border: none !important;
-    padding: 15px !important;
-}
-.table-dark {
-    --bs-table-bg: var(--concho);
-    --bs-table-color: #fff;
-    --bs-table-border-color: rgba(255,255,255,.25);
-}
-.btn-primary{
-    --bs-btn-bg: var(--concho);
-    --bs-btn-border-color: var(--concho);
-    --bs-btn-hover-bg: var(--concho-2);
-    --bs-btn-hover-border-color: var(--concho-2);
-    --bs-btn-active-bg: var(--concho-2);
-    --bs-btn-active-border-color: var(--concho-2);
-}
-.btn-outline-dark{
-    --bs-btn-color: var(--concho);
-    --bs-btn-border-color: var(--concho);
-    --bs-btn-hover-color: #fff;
-    --bs-btn-hover-bg: var(--concho);
-    --bs-btn-hover-border-color: var(--concho);
-    --bs-btn-active-bg: var(--concho);
-    --bs-btn-active-border-color: var(--concho);
-}
-
-/* ========= MENSAJES ========= */
-.alert-soft{
-    border:0;
-    border-radius: 14px;
-    box-shadow: 0 8px 25px rgba(0,0,0,.06);
-}
-
-/* ========= PORTADA ========= */
-.card-modulo { min-height: 220px; }
-.card-modulo h5 { font-size: 1.25rem; }
-.card-modulo p { font-size: 0.95rem; }
-.btn-modulo { padding: 12px 16px; font-size: 1rem; border-radius: 8px; }
-
-/* ========= ESTILO TIENDA (solo Productos) ========= */
-body.mod-productos .shop-nav{
+/* ========= NAVBAR GLOBAL ========= */
+.shop-nav{
     background: #fff !important;
     border-bottom: 1px solid rgba(0,0,0,.06);
 }
-body.mod-productos .shop-brand{
+.shop-brand{
     display:flex; align-items:center; gap:10px;
     font-weight:800;
     color: var(--concho);
     text-decoration:none;
 }
-body.mod-productos .shop-brand .logo{
+.shop-brand .logo{
     width:36px; height:36px;
     border-radius: 50%;
     background: var(--concho);
     display:grid; place-items:center;
     color:#fff;
 }
-body.mod-productos .shop-hero{
+.shop-nav .nav-link{
+    color:#555 !important;
+    font-weight:600;
+}
+.shop-nav .nav-link:hover{
+    color: var(--concho) !important;
+}
+
+/* ========= HERO HOME (COMO TU EJEMPLO: overlay oscuro + centrado) ========= */
+.home-hero{
+    min-height: 520px;
+    display:flex;
+    align-items:center;
+    text-align:center;
+
+    background:
+        linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.55)),
+        url("https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1600&q=60");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.home-hero .container{ width:100%; }
+.home-hero h1{
+    color:#fff !important;
+    font-weight:900;
+    text-shadow: 0 10px 30px rgba(0,0,0,.55);
+}
+.home-hero p{
+    color: rgba(255,255,255,.90) !important;
+    text-shadow: 0 8px 22px rgba(0,0,0,.45);
+}
+.home-hero .btn{
+    border-radius: 999px !important;
+    padding: 14px 46px !important;
+    font-weight: 800 !important;
+    box-shadow: 0 14px 30px rgba(0,0,0,.25);
+}
+
+/* ========= HERO PRODUCTOS ========= */
+.shop-hero{
     height: 200px;
     border-radius: 0;
     background:
@@ -103,17 +100,18 @@ body.mod-productos .shop-hero{
     display:flex;
     align-items:center;
 }
-body.mod-productos .shop-hero h1{
+.shop-hero h1{
     color:#fff;
     font-weight:800;
     letter-spacing:.2px;
     text-shadow: 0 12px 24px rgba(0,0,0,.35);
 }
-body.mod-productos .shop-shell{
+.shop-shell{
     padding-top: 22px;
+    padding-bottom: 10px;
 }
 
-/* Sidebar */
+/* ========= SIDEBAR PRODUCTOS (TU ESTILO ANTIGUO) ========= */
 .shop-side{
     background:#fff;
     border-radius: var(--card-radius);
@@ -150,8 +148,6 @@ body.mod-productos .shop-shell{
     background: rgba(0,0,0,.06);
     margin: 14px 0;
 }
-
-/* Buscar input (antes estaba inline) */
 .shop-search-icon{
     background:#fff !important;
     border:0 !important;
@@ -163,7 +159,7 @@ body.mod-productos .shop-shell{
     box-shadow: inset 0 0 0 1px rgba(0,0,0,.08) !important;
 }
 
-/* Cards productos */
+/* ========= PRODUCT CARDS ========= */
 .product-card{
     background:#fff;
     border-radius: var(--card-radius);
@@ -214,131 +210,41 @@ body.mod-productos .shop-shell{
     font-weight:800;
 }
 
-/* Detalle */
-.detail-card{
-    background:#fff;
-    border-radius: 22px;
-    box-shadow: 0 12px 40px rgba(0,0,0,.06);
-    border: 1px solid rgba(0,0,0,.05);
-    overflow:hidden;
-}
+/* ========= DETALLE (NO CORTAR IMAGEN) ========= */
 .detail-img{
     width:100%;
-    height: 320px;
-    object-fit: cover;
+    max-height: 420px;
+    height:auto;
+    object-fit: contain;
     background:#f1f1f1;
-}
-.detail-title{
-    font-weight:900;
-    font-size: 28px;
-    margin: 6px 0 10px;
-}
-.pill{
-    display:inline-block;
-    padding: 10px 14px;
-    border-radius: 14px;
-    background:#f6f6fb;
-    border: 1px solid rgba(0,0,0,.06);
-    font-weight:700;
-    font-size: 13px;
+    display:block;
 }
 
-/* Imagen en editar */
-.product-thumb{
-    width:120px;
-    height:120px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid #ddd;
+/* ========= FOOTER GLOBAL (FIX: que SI se vea en Contacto/Productos) ========= */
+.footer-main{
+    background:#171717;
+    color:rgba(255,255,255,.82);
 }
-/* ========= HOME / PORTADA ========= */
-
-/* Hero Section más grande para el Home */
-.home-hero {
-    /* La imagen del screenshot */
-    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1920&q=80');
-    background-size: cover;
-    background-position: center;
-    height: 550px; /* Más alto que el shop-hero */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: white;
-    margin-bottom: 3rem;
-    /* Truco para romper el container de Bootstrap si el layout te obliga a estar dentro */
-    margin-left: calc(-50vw + 50%);
-    width: 100vw;
+.footer-main h5,
+.footer-main h6{
+    color:#fff;
+}
+.footer-main .text-muted{
+    color:rgba(255,255,255,.65) !important;
 }
 
-/* Categorías con Imagen */
-.cat-card {
-    text-align: center;
-    transition: transform 0.3s ease;
-    cursor: pointer;
-    text-decoration: none;
-    color: #333;
+/* LINKS en footer (fix azul subrayado) */
+.footer-main a,
+.footer-links a{
+    color:rgba(255,255,255,.78) !important;
+    text-decoration:none !important;
 }
-.cat-card:hover {
-    transform: translateY(-5px);
-    color: var(--concho);
-}
-.cat-img-wrap {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 10px;
-    border-radius: 50%; /* Círculo */
-    overflow: hidden;
-    background: #fff;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid transparent;
-}
-.cat-card:hover .cat-img-wrap {
-    border-color: var(--concho);
-}
-.cat-img-wrap img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.footer-main a:hover,
+.footer-links a:hover{
+    color:#fff !important;
+    text-decoration:underline !important;
 }
 
-/* Footer Home (Full Width) */
-.home-footer {
-    background-color: #1a1a1a; /* Oscuro como el screenshot */
-    color: #bbb;
-    padding-top: 60px;
-    padding-bottom: 30px;
-    margin-top: 60px;
-    margin-left: calc(-50vw + 50%); /* Romper container */
-    width: 100vw;
-}
-.home-footer h5 { color: white; font-weight: 700; margin-bottom: 20px; }
-.home-footer a { color: #bbb; text-decoration: none; margin-bottom: 10px; display: block; font-size: 0.9rem; }
-.home-footer a:hover { color: white; }
-.home-footer .social-icon { font-size: 1.2rem; margin-right: 15px; }
+.footer-divider{ border-color:rgba(255,255,255,.12); }
+.footer-copy{ color:rgba(255,255,255,.60); }
 
-/* Precio Tachado */
-.precio-antes {
-    text-decoration: line-through;
-    color: #999;
-    font-size: 0.9rem;
-    margin-left: 8px;
-}
-
-/* Etiqueta Flotante (Oferta/Nuevo) */
-.badge-oferta {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: #dc3545; /* Rojo Bootstrap */
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 800;
-    padding: 4px 10px;
-    border-radius: 4px;
-    z-index: 10;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}

@@ -126,44 +126,4 @@
         </div>
     </div>
 
-    {{-- 5. FOOTER (Fuera del flujo normal con CSS full-width) --}}
-    <footer class="home-footer">
-        <div class="container">
-            <div class="row gy-4">
-                <div class="col-lg-4 col-md-6">
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                        <i class="fa-solid fa-cart-shopping text-concho fs-4"></i>
-                        <span class="fw-bold fs-4 text-white">MarketCuy</span>
-                    </div>
-                    <p class="small text-secondary">Tu supermercado en casa. Productos frescos y de calidad directo a tu puerta.</p>
-                </div>
-
-                <div class="col-lg-2 col-md-6">
-                    <h5>Enlaces</h5>
-                    <a href="{{ route('home') }}">Inicio</a>
-                    <a href="{{ route('productos.index') }}">Productos</a>
-                    <a href="#">Contacto</a>
-                </div>
-
-                <div class="col-lg-2 col-md-6">
-                    <h5>Categorías</h5>
-                    <a href="#">Frutas y Verduras</a>
-                    <a href="#">Carnes</a>
-                    <a href="#">Lácteos</a>
-                    <a href="#">Panadería</a>
-                </div>
-
-                <div class="col-lg-4 col-md-6">
-                    <h5>Contacto</h5>
-                    <p class="mb-2"><i class="fa-regular fa-envelope me-2"></i> contacto@marketcuy.com</p>
-                    <p class="mb-2"><i class="fa-solid fa-phone me-2"></i> +593 99 999 9999</p>
-                    <p><i class="fa-solid fa-location-dot me-2"></i> Quito, Ecuador</p>
-                </div>
-            </div>
-            <div class="border-top border-secondary mt-5 pt-4 text-center small text-secondary">
-                &copy; 2025 MarketCuy. Todos los derechos reservados.
-            </div>
-        </div>
-    </footer>
-
 @endsection
