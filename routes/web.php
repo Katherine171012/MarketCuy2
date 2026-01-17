@@ -76,18 +76,6 @@ Route::prefix('productos')->group(function () {
     Route::delete('/{id}', [ProductoController::class, 'destroy'])->name('productos.destroy');
 });
 
-Route::get('/contacto', [ContactoController::class, 'index'])->name('contacto.index');
-Route::post('/contacto', [ContactoController::class, 'store'])->name('contacto.store');
-
-
-// RUTA HOME - AGREGAR ESTA LÍNEA
-Route::get('/', function () {
-    return view('welcome'); // o 'home' si tienes esa vista
-})->name('home');
-
-// Resto de tus rutas...
-Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
-Route::get('/productos/{id}', [ProductoController::class, 'show'])->name('productos.show');
 
 Route::get('/contacto', [ContactoController::class, 'index'])->name('contacto.index');
 Route::post('/contacto', [ContactoController::class, 'store'])->name('contacto.store');

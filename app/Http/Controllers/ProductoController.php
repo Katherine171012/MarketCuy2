@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Producto;
 use App\Models\UnidadMedida;
+use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class ProductoController extends Controller
 {
@@ -21,16 +21,28 @@ class ProductoController extends Controller
         $data['msg'] = config('mensajes', []);
         return view($view, $data);
     }
+
     public function index(Request $request)
     {
         $perPage = (int) $request->get('per_page', 10);
         if (!in_array($perPage, [10, 25, 50, 100], true)) {
             $perPage = 10;
         }
-        $productos = Producto::obtenerParaLista($perPage);
+
+        $catId = $request->get('categoria');
+
+        if ($catId) {
+            // Caso 1: Vienen del Home con una categoría seleccionada
+            $productos = Producto::paginarActivosConFiltros(null, $catId, null, $perPage);
+        } else {
+            // Caso 2: Entran normal al módulo (Tu lógica original intacta)
+            $productos = Producto::obtenerParaLista($perPage);
+        }
         $productos->appends($request->except('page'));
 
         $unidades = UnidadMedida::listar();
+        $categorias = Categoria::listarActivas();
+
         $editId = $request->get('edit');
         $productoEditar = null;
 
@@ -43,9 +55,10 @@ class ProductoController extends Controller
             }
             if ($productoEditar->estado_prod === 'INA') {
                 return redirect()->route('productos.index')
-                    ->with('error', $this->msg('M60')); // operación no permitida
+                    ->with('error', $this->msg('M60'));
             }
         }
+
         $deleteId = $request->get('delete');
         $productoEliminar = null;
 
@@ -57,6 +70,7 @@ class ProductoController extends Controller
                     ->with('error', $this->msg('gen.error'));
             }
         }
+
         $viewId = $request->get('view');
         $productoVer = null;
 
@@ -72,17 +86,27 @@ class ProductoController extends Controller
         return $this->viewWithMsgs('productos.index', [
             'productos' => $productos,
             'unidades' => $unidades,
+            'categorias' => $categorias,
             'productoEditar' => $productoEditar,
             'productoEliminar' => $productoEliminar,
             'productoVer' => $productoVer,
             'info' => $productos->count() === 0 ? $this->msg('M59') : null,
+            'categoriaSeleccionada' => $catId,
         ]);
     }
+
     public function store(Request $request)
     {
-        if (!$request->pro_descripcion) {
+        // ✅ ahora el nombre real es pro_nombre
+        if (!$request->pro_nombre) {
             return back()->withErrors([
-                'pro_descripcion' => $this->msg('M25')
+                'pro_nombre' => $this->msg('M25')
+            ])->withInput();
+        }
+
+        if (!$request->id_categoria) {
+            return back()->withErrors([
+                'id_categoria' => 'Seleccione una categoría.'
             ])->withInput();
         }
 
@@ -124,15 +148,15 @@ class ProductoController extends Controller
             ])->withInput();
         }
 
-        if (Producto::existeDescripcion($request->pro_descripcion)) {
+        // ✅ validar duplicado por pro_nombre
+        if (Producto::existeNombre($request->pro_nombre)) {
             return back()->withErrors([
-                'pro_descripcion' => $this->msg('M26')
+                'pro_nombre' => $this->msg('M26')
             ])->withInput();
         }
+
         if ($request->hasFile('pro_imagen')) {
-
             $file = $request->file('pro_imagen');
-
             $ext = strtolower($file->getClientOriginalExtension());
 
             if (!in_array($ext, ['jpg', 'jpeg', 'pdf'], true)) {
@@ -148,21 +172,12 @@ class ProductoController extends Controller
             $data = $request->all();
             $data['id_producto'] = $nuevoId;
 
-            // ✅ IMAGEN: guardar con nombre = ID del producto (P1000, P1001...)
+            // ✅ IMAGEN: guardar con nombre = ID del producto
             if ($request->hasFile('pro_imagen') && $request->file('pro_imagen')->isValid()) {
-
                 $file = $request->file('pro_imagen');
-
-                // extensión real del archivo (jpg, png, webp, etc.)
                 $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-
-                // nombre final: P1005.jpg (o png, etc.)
                 $filename = $nuevoId . '.' . $ext;
-
-                // se guarda en: storage/app/public/productos/P1005.jpg
-                // y se registra en BD como: productos/P1005.jpg
                 $path = $file->storeAs('productos', $filename, 'public');
-
                 $data['pro_imagen'] = $path;
             } else {
                 $data['pro_imagen'] = null;
@@ -187,6 +202,7 @@ class ProductoController extends Controller
                 ->withInput();
         }
     }
+
     public function update(Request $request, $id)
     {
         $producto = Producto::buscarPorId($id);
@@ -228,7 +244,8 @@ class ProductoController extends Controller
         ];
 
         foreach ($nums as $n) {
-            if ($request->$n < 0) {
+            $val = $request->input($n);
+            if ($val !== null && $val !== '' && (int)$val < 0) {
                 return back()->withErrors([
                     'stock' => $this->msg('M35')
                 ])->withInput();
@@ -257,6 +274,7 @@ class ProductoController extends Controller
                 ->withInput();
         }
     }
+
     public function destroy($id)
     {
         $producto = Producto::buscarPorId($id);
@@ -290,6 +308,7 @@ class ProductoController extends Controller
                 ->with('error', $this->msg('gen.error'));
         }
     }
+
     public function buscar(Request $request)
     {
         $perPage = (int) $request->get('per_page', 10);
@@ -297,13 +316,16 @@ class ProductoController extends Controller
             $perPage = 10;
         }
 
-        $orden     = $request->input('orden');
-        $categoria = $request->input('pro_categoria');
-        $unidad    = $request->input('unidad_medida');
+        $orden      = $request->input('orden');
 
-        $tieneOrden     = ($orden !== null && $orden !== '');
-        $tieneCategoria = ($categoria !== null && $categoria !== '');
-        $tieneUnidad    = ($unidad !== null && $unidad !== '');
+        // ✅ ahora el filtro es id_categoria
+        $idCategoria = $request->input('id_categoria');
+
+        $unidad     = $request->input('unidad_medida');
+
+        $tieneOrden      = ($orden !== null && $orden !== '');
+        $tieneCategoria  = ($idCategoria !== null && $idCategoria !== '');
+        $tieneUnidad     = ($unidad !== null && $unidad !== '');
 
         if (!$tieneOrden && !$tieneCategoria && !$tieneUnidad) {
             return back()->withErrors([
@@ -314,7 +336,7 @@ class ProductoController extends Controller
         try {
             $productos = Producto::paginarActivosConFiltros(
                 $orden,
-                $categoria,
+                $idCategoria,
                 $unidad,
                 $perPage
             );
@@ -328,10 +350,12 @@ class ProductoController extends Controller
             $productos->appends($request->except('page'));
 
             $unidades = UnidadMedida::listar();
+            $categorias = Categoria::listarActivas();
 
             return $this->viewWithMsgs('productos.index', [
                 'productos' => $productos,
                 'unidades' => $unidades,
+                'categorias' => $categorias,
                 'productoEditar' => null,
                 'productoEliminar' => null,
                 'productoVer' => null,

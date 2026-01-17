@@ -24,28 +24,27 @@
             </a>
         </div>
 
+        @php
+            $seed = intval(preg_replace('/\D/', '', $productoVer->id_producto)) ?: 1;
+            $rating = 3.8 + (($seed % 13) / 20);
+            $reviews = 120 + ($seed % 800);
+
+            $cat = $productoVer->categoria?->cat_nombre ?? 'Sin categoría';
+        @endphp
+
         <div class="text-muted small mb-3">
             Inicio &nbsp;›&nbsp; Productos &nbsp;›&nbsp;
-            <span class="fw-bold">{{ $productoVer->pro_categoria ?? 'Sin categoría' }}</span>
-            &nbsp;›&nbsp; {{ $productoVer->pro_descripcion }}
+            <span class="fw-bold">{{ $cat }}</span>
+            &nbsp;›&nbsp; {{ $productoVer->pro_nombre }}
         </div>
-
-        @php
-            // rating visual (fake pero estable por ID, solo UI)
-            $seed = intval(preg_replace('/\D/', '', $productoVer->id_producto)) ?: 1;
-            $rating = 3.8 + (($seed % 13) / 20); // 3.8 - 4.45
-            $reviews = 120 + ($seed % 800);
-            $cat = $productoVer->pro_categoria ?? 'Productos';
-        @endphp
 
         <div class="detail-card p-4">
             <div class="row g-4 align-items-start">
                 <div class="col-lg-6">
                     @if(!empty($productoVer->pro_imagen))
-                        {{-- FIX: tu BD guarda "productos/P1000.jpg" -> asset('storage/' . ...) --}}
                         <img class="detail-img rounded-4"
                              src="{{ asset('storage/' . $productoVer->pro_imagen) }}"
-                             alt="Imagen {{ $productoVer->pro_descripcion }}">
+                             alt="Imagen {{ $productoVer->pro_nombre }}">
                     @else
                         <div class="detail-img rounded-4 d-flex align-items-center justify-content-center text-muted">
                             Sin imagen
@@ -56,7 +55,7 @@
                 <div class="col-lg-6">
                     <span class="badge-cat">{{ $cat }}</span>
 
-                    <div class="detail-title">{{ $productoVer->pro_descripcion }}</div>
+                    <div class="detail-title">{{ $productoVer->pro_nombre }}</div>
 
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <span class="stars">
@@ -110,7 +109,6 @@
                         </div>
                     </div>
 
-                    {{-- cantidad demo (sin backend) --}}
                     <div class="d-flex align-items-center gap-3 mb-3">
                         <div class="text-muted small fw-bold">Cantidad</div>
                         <div class="d-flex align-items-center gap-2">
@@ -120,7 +118,13 @@
                         </div>
                     </div>
 
-                    <button class="btn btn-concho product-btn py-3" type="button" disabled>
+                    <button id="btnAddToCart"
+                            type="button"
+                            class="btn btn-concho product-btn py-3"
+                            {{-- Aquí guardamos los datos que luego enviarás a Firebase --}}
+                            data-id="{{ $productoVer->id_producto }}"
+                            data-nombre="{{ $productoVer->pro_nombre }}"
+                            data-precio="{{ $productoVer->pro_precio_venta }}">
                         <i class="fa-solid fa-cart-shopping me-2"></i> Agregar al Carrito
                     </button>
                     <div class="text-muted small mt-2">
@@ -130,64 +134,62 @@
             </div>
         </div>
 
-        <div class="detail-card p-4 mt-4">
-            <ul class="nav nav-tabs" id="tabDetalle" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active fw-bold" id="desc-tab" data-bs-toggle="tab" data-bs-target="#desc" type="button" role="tab">
-                        Descripción
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-bold" id="nutri-tab" data-bs-toggle="tab" data-bs-target="#nutri" type="button" role="tab">
-                        Información Nutricional
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-bold" id="rev-tab" data-bs-toggle="tab" data-bs-target="#rev" type="button" role="tab">
-                        Reviews
-                    </button>
-                </li>
-            </ul>
-
-            <div class="tab-content pt-3">
-                <div class="tab-pane fade show active" id="desc" role="tabpanel">
-                    <p class="mb-0">
-                        {{ $productoVer->pro_descripcion }}. Producto en categoría <b>{{ $cat }}</b>.
-                    </p>
-                </div>
-                <div class="tab-pane fade" id="nutri" role="tabpanel">
-                    <p class="mb-0 text-muted">
-                        (Demo) Este módulo no maneja nutrición. Aquí iría la ficha nutricional si existiera en tu BD.
-                    </p>
-                </div>
-                <div class="tab-pane fade" id="rev" role="tabpanel">
-                    <p class="mb-0 text-muted">
-                        (Demo) Reviews simuladas para diseño.
-                    </p>
-                </div>
-            </div>
-        </div>
-
         <script>
             (function(){
+                // --- 1. Lógica de los botones + y - (Cantidad) ---
                 const qtyEl = document.getElementById('qty');
                 const btnMinus = document.getElementById('btnMinus');
                 const btnPlus = document.getElementById('btnPlus');
-                if(!qtyEl || !btnMinus || !btnPlus) return;
+                let cantidadActual = 1;
 
-                let q = 1;
-                btnMinus.addEventListener('click', () => {
-                    q = Math.max(1, q-1);
-                    qtyEl.textContent = q;
-                });
-                btnPlus.addEventListener('click', () => {
-                    q = q + 1;
-                    qtyEl.textContent = q;
-                });
+                if(qtyEl && btnMinus && btnPlus) {
+                    btnMinus.addEventListener('click', () => {
+                        cantidadActual = Math.max(1, cantidadActual - 1);
+                        qtyEl.textContent = cantidadActual;
+                    });
+                    btnPlus.addEventListener('click', () => {
+                        cantidadActual = cantidadActual + 1;
+                        qtyEl.textContent = cantidadActual;
+                    });
+                }
+
+                // --- 2. Lógica del Botón "Añadir al Carrito" ---
+                const btnAdd = document.getElementById('btnAddToCart');
+
+                if(btnAdd) {
+                    btnAdd.addEventListener('click', () => {
+
+                        // A) VERIFICAMOS SI EL USUARIO ESTÁ LOGUEADO
+                        const token = localStorage.getItem('auth_token');
+
+                        if (!token) {
+                            // SI NO TIENE TOKEN: Lo mandamos al Login
+                            const irAlLogin = confirm(" Debes iniciar sesión para comprar.\n\n¿Quieres ir al Login ahora?");
+
+                            if (irAlLogin) {
+                                // Redirigimos a la ruta raiz donde pusiste el login
+                                window.location.href = "{{ route('login') }}";
+                            }
+                            return; // Detenemos el código aquí.
+                        }
+
+                        // B) SI TIENE TOKEN: (Aquí irá la lógica de Firebase después)
+                        // Por ahora, solo simulamos que funciona.
+
+                        const producto = {
+                            id: btnAdd.getAttribute('data-id'),
+                            nombre: btnAdd.getAttribute('data-nombre'),
+                            precio: btnAdd.getAttribute('data-precio'),
+                            cantidad: cantidadActual
+                        };
+
+                        console.log("Usuario autenticado. Listo para enviar a Firebase:", producto);
+                        alert(` Producto listo para agregar al carrito (Firebase).\n\nUsuario autorizado.`);
+                    });
+                }
             })();
         </script>
 
-        {{-- MODO LISTADO (TIENDA) --}}
     @else
 
         <div class="row g-4">
@@ -205,8 +207,6 @@
                         {{ $productos->total() }} productos encontrados
                     </div>
 
-                    {{-- (Tu CRUD sigue existiendo, lo dejo oculto para que no dañe el look tienda)
-                         Si quieres verlo, quita d-none --}}
                     <div class="d-none">
                         <a class="btn btn-primary"
                            href="{{ route('productos.index', ['create' => 1]) }}">
@@ -215,7 +215,6 @@
                     </div>
                 </div>
 
-                {{-- cards --}}
                 <div class="row g-4" id="gridProductos">
                     @foreach($productos as $p)
                         @php
@@ -223,19 +222,18 @@
                             $rating = 3.7 + (($seed % 13) / 20);
                             $reviews = 90 + ($seed % 900);
 
-                            $cat = $p->pro_categoria ?? 'Productos';
+                            $cat = $p->categoria?->cat_nombre ?? 'Sin categoría';
                         @endphp
 
                         <div class="col-12 col-md-6 col-xl-4 producto-item"
-                             data-nombre="{{ strtolower($p->pro_descripcion) }}"
+                             data-nombre="{{ strtolower($p->pro_nombre) }}"
                              data-precio="{{ floatval($p->pro_precio_venta) }}"
                              data-cat="{{ strtolower($cat) }}">
                             <div class="product-card h-100">
                                 <div class="imgwrap">
                                     @if(!empty($p->pro_imagen))
-                                        {{-- FIX: BD guarda "productos/P1000.jpg" --}}
                                         <img src="{{ asset('storage/' . $p->pro_imagen) }}"
-                                             alt="Imagen {{ $p->pro_descripcion }}">
+                                             alt="Imagen {{ $p->pro_nombre }}">
                                     @else
                                         <div class="h-100 d-flex align-items-center justify-content-center text-muted small">
                                             Sin imagen
@@ -246,7 +244,7 @@
                                 <div class="p-3">
                                     <span class="badge-cat">{{ $cat }}</span>
 
-                                    <div class="product-title">{{ $p->pro_descripcion }}</div>
+                                    <div class="product-title">{{ $p->pro_nombre }}</div>
 
                                     <div class="d-flex align-items-center gap-2 mb-2">
                                         <span class="stars">
@@ -285,7 +283,6 @@
                     @endif
                 </div>
 
-                {{-- paginación --}}
                 <div class="d-flex justify-content-center mt-4">
                     {{ $productos->links('pagination::bootstrap-4') }}
                 </div>
@@ -293,7 +290,6 @@
             </div>
         </div>
 
-        {{-- filtros locales (buscar + slider precio) sin backend --}}
         <script>
             (function(){
                 const txt = document.getElementById('txtBuscarLocal');

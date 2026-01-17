@@ -19,9 +19,9 @@
                 </div>
 
                 <div class="col-md-8">
-                    <label class="form-label">Descripción</label>
+                    <label class="form-label">Nombre</label>
                     <input type="text" class="form-control"
-                           value="{{ $productoEditar->pro_descripcion }}" disabled>
+                           value="{{ $productoEditar->pro_nombre }}" disabled>
                 </div>
 
                 <div class="col-md-6">
@@ -65,8 +65,7 @@
                         <div class="mb-2">
                             <img src="{{ asset('storage/' . $productoEditar->pro_imagen) }}"
                                  alt="Imagen actual"
-                                 width="120" height="120"
-                                 style="object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
+                                 class="product-thumb">
                         </div>
                     @else
                         <div class="mb-2 text-muted small">
@@ -89,18 +88,20 @@
 
             {{-- DATOS EDITABLES --}}
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label">Categoría</label>
-                    <select name="pro_categoria" class="form-select" required>
+                    <select name="id_categoria" class="form-select" required>
                         <option value="">Seleccione categoría</option>
-                        <option value="Alimentos" {{ $productoEditar->pro_categoria == 'Alimentos' ? 'selected' : '' }}>Alimentos</option>
-                        <option value="Medicinas" {{ $productoEditar->pro_categoria == 'Medicinas' ? 'selected' : '' }}>Medicinas</option>
-                        <option value="Ropa"      {{ $productoEditar->pro_categoria == 'Ropa' ? 'selected' : '' }}>Ropa</option>
-                        <option value="Otros"     {{ $productoEditar->pro_categoria == 'Otros' ? 'selected' : '' }}>Otros</option>
+                        @foreach(($categorias ?? []) as $c)
+                            <option value="{{ $c->id_categoria }}"
+                                {{ (string)$productoEditar->id_categoria === (string)$c->id_categoria ? 'selected' : '' }}>
+                                {{ $c->cat_nombre }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">Precio compra</label>
                     <input type="number" step="0.01" min="0"
                            name="pro_valor_compra"
@@ -108,7 +109,7 @@
                            value="{{ old('pro_valor_compra', $productoEditar->pro_valor_compra) }}">
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">Precio venta</label>
                     <input type="number" step="0.01" min="0"
                            name="pro_precio_venta"
