@@ -121,9 +121,17 @@ class Producto extends Model
         ?string $orden,
         ?string $idCategoria,
         ?string $unidad,
+        ?string $q,
         int $perPage = 10
     ) {
         $query = self::queryActivos();
+
+        // ✅ Buscar GLOBAL por nombre (usuario final)
+        if ($q !== null && trim($q) !== '') {
+            $q = trim($q);
+            // Postgres: ILIKE
+            $query->where('pro_nombre', 'ILIKE', '%' . $q . '%');
+        }
 
         // ✅ Filtrar por FK id_categoria
         if ($idCategoria !== null && $idCategoria !== '') {

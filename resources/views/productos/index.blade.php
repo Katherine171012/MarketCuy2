@@ -25,11 +25,8 @@
         </div>
 
         @php
-            $seed = intval(preg_replace('/\D/', '', $productoVer->id_producto)) ?: 1;
-            $rating = 3.8 + (($seed % 13) / 20);
-            $reviews = 120 + ($seed % 800);
-
             $cat = $productoVer->categoria?->cat_nombre ?? 'Sin categoría';
+            $desc = $productoVer->pro_descripcion ?? null;
         @endphp
 
         <div class="text-muted small mb-3">
@@ -57,44 +54,19 @@
 
                     <div class="detail-title">{{ $productoVer->pro_nombre }}</div>
 
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="stars">
-                            @for($i=1; $i<=5; $i++)
-                                @if($rating >= $i)
-                                    <i class="fa-solid fa-star"></i>
-                                @elseif($rating >= ($i-0.5))
-                                    <i class="fa-solid fa-star-half-stroke"></i>
-                                @else
-                                    <i class="fa-regular fa-star"></i>
-                                @endif
-                            @endfor
-                        </span>
-                        <span class="small text-muted">
-                            {{ number_format($rating, 1) }} ({{ $reviews }} reviews)
-                        </span>
-                    </div>
+                    {{-- ✅ SIN ESTRELLAS / REVIEWS --}}
 
                     <div class="price mb-3">
                         ${{ number_format((float) $productoVer->pro_precio_venta, 2) }}
                     </div>
 
+                    {{-- ✅ DESCRIPCIÓN DESDE BD --}}
                     <p class="text-muted mb-3">
-                        Producto registrado en el inventario. Categoría: <b>{{ $cat }}</b>.
+                        {{ !empty($desc) ? $desc : 'Sin descripción disponible.' }}
                     </p>
 
+                    {{-- ✅ NO mostrar ID / Stock / Estado --}}
                     <div class="row g-2 mb-3">
-                        <div class="col-md-6">
-                            <div class="pill w-100">
-                                <span class="text-muted">ID</span><br>
-                                {{ $productoVer->id_producto }}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="pill w-100">
-                                <span class="text-muted">Stock</span><br>
-                                {{ $productoVer->pro_saldo_final }}
-                            </div>
-                        </div>
                         <div class="col-md-6">
                             <div class="pill w-100">
                                 <span class="text-muted">Unidad</span><br>
@@ -103,8 +75,8 @@
                         </div>
                         <div class="col-md-6">
                             <div class="pill w-100">
-                                <span class="text-muted">Estado</span><br>
-                                {{ $productoVer->estado_prod === 'ACT' ? 'Activo' : 'Inactivo' }}
+                                <span class="text-muted">Categoría</span><br>
+                                {{ $cat }}
                             </div>
                         </div>
                     </div>
@@ -118,13 +90,7 @@
                         </div>
                     </div>
 
-                    <button id="btnAddToCart"
-                            type="button"
-                            class="btn btn-concho product-btn py-3"
-                            {{-- Aquí guardamos los datos que luego enviarás a Firebase --}}
-                            data-id="{{ $productoVer->id_producto }}"
-                            data-nombre="{{ $productoVer->pro_nombre }}"
-                            data-precio="{{ $productoVer->pro_precio_venta }}">
+                    <button class="btn btn-concho product-btn py-3" type="button" disabled>
                         <i class="fa-solid fa-cart-shopping me-2"></i> Agregar al Carrito
                     </button>
                     <div class="text-muted small mt-2">
@@ -136,57 +102,20 @@
 
         <script>
             (function(){
-                // --- 1. Lógica de los botones + y - (Cantidad) ---
                 const qtyEl = document.getElementById('qty');
                 const btnMinus = document.getElementById('btnMinus');
                 const btnPlus = document.getElementById('btnPlus');
-                let cantidadActual = 1;
+                if(!qtyEl || !btnMinus || !btnPlus) return;
 
-                if(qtyEl && btnMinus && btnPlus) {
-                    btnMinus.addEventListener('click', () => {
-                        cantidadActual = Math.max(1, cantidadActual - 1);
-                        qtyEl.textContent = cantidadActual;
-                    });
-                    btnPlus.addEventListener('click', () => {
-                        cantidadActual = cantidadActual + 1;
-                        qtyEl.textContent = cantidadActual;
-                    });
-                }
-
-                // --- 2. Lógica del Botón "Añadir al Carrito" ---
-                const btnAdd = document.getElementById('btnAddToCart');
-
-                if(btnAdd) {
-                    btnAdd.addEventListener('click', () => {
-
-                        // A) VERIFICAMOS SI EL USUARIO ESTÁ LOGUEADO
-                        const token = localStorage.getItem('auth_token');
-
-                        if (!token) {
-                            // SI NO TIENE TOKEN: Lo mandamos al Login
-                            const irAlLogin = confirm(" Debes iniciar sesión para comprar.\n\n¿Quieres ir al Login ahora?");
-
-                            if (irAlLogin) {
-                                // Redirigimos a la ruta raiz donde pusiste el login
-                                window.location.href = "{{ route('login') }}";
-                            }
-                            return; // Detenemos el código aquí.
-                        }
-
-                        // B) SI TIENE TOKEN: (Aquí irá la lógica de Firebase después)
-                        // Por ahora, solo simulamos que funciona.
-
-                        const producto = {
-                            id: btnAdd.getAttribute('data-id'),
-                            nombre: btnAdd.getAttribute('data-nombre'),
-                            precio: btnAdd.getAttribute('data-precio'),
-                            cantidad: cantidadActual
-                        };
-
-                        console.log("Usuario autenticado. Listo para enviar a Firebase:", producto);
-                        alert(` Producto listo para agregar al carrito (Firebase).\n\nUsuario autorizado.`);
-                    });
-                }
+                let q = 1;
+                btnMinus.addEventListener('click', () => {
+                    q = Math.max(1, q-1);
+                    qtyEl.textContent = q;
+                });
+                btnPlus.addEventListener('click', () => {
+                    q = q + 1;
+                    qtyEl.textContent = q;
+                });
             })();
         </script>
 
@@ -218,17 +147,11 @@
                 <div class="row g-4" id="gridProductos">
                     @foreach($productos as $p)
                         @php
-                            $seed = intval(preg_replace('/\D/', '', $p->id_producto)) ?: 1;
-                            $rating = 3.7 + (($seed % 13) / 20);
-                            $reviews = 90 + ($seed % 900);
-
                             $cat = $p->categoria?->cat_nombre ?? 'Sin categoría';
                         @endphp
 
                         <div class="col-12 col-md-6 col-xl-4 producto-item"
-                             data-nombre="{{ strtolower($p->pro_nombre) }}"
-                             data-precio="{{ floatval($p->pro_precio_venta) }}"
-                             data-cat="{{ strtolower($cat) }}">
+                             data-precio="{{ floatval($p->pro_precio_venta) }}">
                             <div class="product-card h-100">
                                 <div class="imgwrap">
                                     @if(!empty($p->pro_imagen))
@@ -246,20 +169,7 @@
 
                                     <div class="product-title">{{ $p->pro_nombre }}</div>
 
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <span class="stars">
-                                            @for($i=1; $i<=5; $i++)
-                                                @if($rating >= $i)
-                                                    <i class="fa-solid fa-star"></i>
-                                                @elseif($rating >= ($i-0.5))
-                                                    <i class="fa-solid fa-star-half-stroke"></i>
-                                                @else
-                                                    <i class="fa-regular fa-star"></i>
-                                                @endif
-                                            @endfor
-                                        </span>
-                                        <span class="small text-muted">({{ $reviews }})</span>
-                                    </div>
+                                    {{-- ✅ SIN ESTRELLAS / REVIEWS --}}
 
                                     <div class="price mb-3">
                                         ${{ number_format((float) $p->pro_precio_venta, 2) }}
@@ -292,23 +202,17 @@
 
         <script>
             (function(){
-                const txt = document.getElementById('txtBuscarLocal');
+                // ✅ Filtro de PRECIO se mantiene (solo UI local)
                 const range = document.getElementById('rangePrecio');
                 const lbl = document.getElementById('lblPrecio');
                 const items = Array.from(document.querySelectorAll('.producto-item'));
 
                 function aplicar(){
-                    const q = (txt?.value || '').trim().toLowerCase();
                     const max = range ? parseFloat(range.value || '999999') : Infinity;
 
                     items.forEach(el => {
-                        const nombre = el.getAttribute('data-nombre') || '';
                         const precio = parseFloat(el.getAttribute('data-precio') || '0');
-
-                        const okNombre = !q || nombre.includes(q);
-                        const okPrecio = precio <= max;
-
-                        el.style.display = (okNombre && okPrecio) ? '' : 'none';
+                        el.style.display = (precio <= max) ? '' : 'none';
                     });
 
                     if(lbl && range){
@@ -316,9 +220,7 @@
                     }
                 }
 
-                if(txt) txt.addEventListener('input', aplicar);
                 if(range) range.addEventListener('input', aplicar);
-
                 aplicar();
             })();
         </script>

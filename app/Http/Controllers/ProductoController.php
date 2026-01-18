@@ -33,7 +33,7 @@ class ProductoController extends Controller
 
         if ($catId) {
             // Caso 1: Vienen del Home con una categoría seleccionada
-            $productos = Producto::paginarActivosConFiltros(null, $catId, null, $perPage);
+            $productos = Producto::paginarActivosConFiltros(null, $catId, null, null, $perPage);
         } else {
             // Caso 2: Entran normal al módulo (Tu lógica original intacta)
             $productos = Producto::obtenerParaLista($perPage);
@@ -316,18 +316,20 @@ class ProductoController extends Controller
             $perPage = 10;
         }
 
-        $orden      = $request->input('orden');
-
-        // ✅ ahora el filtro es id_categoria
+        $orden       = $request->input('orden');
         $idCategoria = $request->input('id_categoria');
+        $unidad      = $request->input('unidad_medida');
 
-        $unidad     = $request->input('unidad_medida');
+        // ✅ búsqueda global
+        $q           = $request->input('q');
 
         $tieneOrden      = ($orden !== null && $orden !== '');
         $tieneCategoria  = ($idCategoria !== null && $idCategoria !== '');
         $tieneUnidad     = ($unidad !== null && $unidad !== '');
+        $tieneQ          = ($q !== null && trim($q) !== '');
 
-        if (!$tieneOrden && !$tieneCategoria && !$tieneUnidad) {
+        // ✅ ahora permite buscar solo con q
+        if (!$tieneOrden && !$tieneCategoria && !$tieneUnidad && !$tieneQ) {
             return back()->withErrors([
                 'parametros' => $this->msg('M57')
             ])->withInput();
@@ -338,6 +340,7 @@ class ProductoController extends Controller
                 $orden,
                 $idCategoria,
                 $unidad,
+                $q,
                 $perPage
             );
 
