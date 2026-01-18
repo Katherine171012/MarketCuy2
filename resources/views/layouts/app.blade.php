@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('titulo', 'MarketCuy')</title>
 
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     {{-- CSS GLOBAL (para todo: home, productos, contacto, etc.) --}}
@@ -19,7 +17,7 @@
 
     $esPortada     = ($p === '' || request()->routeIs('home'));
     $esProductos   = ($p === 'productos' || str_starts_with($p, 'productos/'));
-    $esContacto    = ($p === 'contacto' || str_starts_with($p, 'contacto/'));
+    $esContacto    = ($p === 'contacto' || str_starts_with($p, 'contacto/')); // por si luego creas ruta
 
     $clasesBody = [];
     if ($esPortada)   $clasesBody[] = 'mod-portada';
@@ -36,7 +34,6 @@
 {{-- ================= NAVBAR (GLOBAL) ================= --}}
 <nav class="navbar navbar-expand-lg shop-nav sticky-top py-3">
     <div class="container">
-        {{-- 1. LOGO --}}
         <a class="shop-brand" href="{{ $homeUrl }}">
             <span class="logo"><i class="fa-solid fa-cart-shopping"></i></span>
             <span>MarketCuy</span>
@@ -47,7 +44,6 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navShop">
-            {{-- 2. MENÚ CENTRAL --}}
             <ul class="navbar-nav mx-auto gap-lg-3">
                 <li class="nav-item">
                     <a class="nav-link {{ $esPortada ? 'fw-bold text-concho' : '' }}" href="{{ $homeUrl }}">Inicio</a>
@@ -56,11 +52,13 @@
                     <a class="nav-link {{ $esProductos ? 'fw-bold text-concho' : '' }}" href="{{ $productosUrl }}">Productos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ $esContacto ? 'fw-bold text-concho' : '' }}" href="#" onclick="return false;">Contacto</a>
+                    <a class="nav-link {{ $esContacto ? 'fw-bold text-concho' : '' }}"
+                       href="{{ route('contacto.index') }}">
+                        Contacto
+                    </a>
                 </li>
             </ul>
 
-            {{-- 3. ZONA DERECHA (Usuario / Login / Carrito) --}}
             <div class="d-flex align-items-center gap-3">
 
                 {{-- A) PARA INVITADOS (NO LOGUEADOS) --}}
@@ -110,7 +108,6 @@
     @yield('content')
 </main>
 
-{{-- ================= FOOTER COMPLETO ================= --}}
 <footer class="footer-main py-5 mt-5">
     <div class="container">
         <div class="row g-4">
@@ -128,7 +125,7 @@
                 <ul class="footer-links list-unstyled">
                     <li><a href="{{ $homeUrl }}">Inicio</a></li>
                     <li><a href="{{ $productosUrl }}">Productos</a></li>
-                    <li><a href="#" onclick="return false;">Contacto</a></li>
+                    <li><a href="{{ route('contacto.index') }}">Contacto</a></li>
                 </ul>
             </div>
 
@@ -162,9 +159,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-{{-- ============================================================ --}}
-{{-- 🔴 SCRIPT DE AUTENTICACIÓN Y CARRITO 🔴 --}}
-{{-- ============================================================ --}}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // 1. Verificar si existe el Token
@@ -222,6 +216,6 @@
         window.location.href = '/'; // Redirigir al home/login
     }
 </script>
-
+@yield('scripts')
 </body>
 </html>

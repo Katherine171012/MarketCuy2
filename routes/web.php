@@ -5,6 +5,8 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ContactoController;
 
+
+
 /*
 |--------------------------------------------------------------------------
 | 1. Portada Principal
@@ -15,7 +17,7 @@ Route::get('/home', function () { return redirect()->route('home'); });
 
 /*
 |--------------------------------------------------------------------------
-| 2. Autenticación
+| 3. Dashboard (Zona Privada)
 |--------------------------------------------------------------------------
 */
 Route::get('/login', function () { return view('login'); })->name('login');
@@ -23,14 +25,17 @@ Route::get('/registro', function () { return view('register'); })->name('registe
 
 /*
 |--------------------------------------------------------------------------
-| 3. Productos (Tu estructura existente)
+| 4. Módulo de Productos
 |--------------------------------------------------------------------------
 */
 Route::get('/producto/ver/{id}', [HomeController::class, 'registrarClick'])->name('producto.click');
 
 Route::prefix('productos')->group(function () {
-    Route::get('/menu', function () { return redirect()->route('home'); });
-    Route::get('/consultar', function () { return redirect()->route('home'); });
+
+    // Rutas de información / redirección
+    Route::get('/menu', function () {
+        return redirect()->route('home');
+    })->name('productos.menu');
 
     // Apunta a tu ProductoController (que carga views/productos/index.blade.php)
     Route::get('/', [ProductoController::class, 'index'])->name('productos.index');
