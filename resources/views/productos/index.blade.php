@@ -147,7 +147,14 @@
                         const counterEl = document.getElementById('cartCounter');
                         if(counterEl) {
                             let current = parseInt(counterEl.innerText || 0);
-                            counterEl.innerText = current + cantidadActual; // Sumamos al instante
+                            let nuevoTotal = current + cantidadActual;
+
+                            // 1. Cambiamos el número en la pantalla
+                            counterEl.innerText = nuevoTotal;
+
+                            // 2. ¡IMPORTANTE!: Cambiamos el número en la MEMORIA (cache)
+                            // Esto evita que el script de app.blade.php lo regrese a 8
+                            localStorage.setItem('cart_count_cache', nuevoTotal);
                         }
 
                         // B. Feedback visual inmediato (sin esperar a Laravel)

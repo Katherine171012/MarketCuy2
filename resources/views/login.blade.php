@@ -177,16 +177,13 @@
             const data = await response.json();
 
             if (response.ok) {
-                // 2. ÉXITO: Guardamos el Token en LocalStorage
                 localStorage.setItem('auth_token', data.token);
+                // Guarda el primer nombre de una vez para que el navbar lo tenga listo
+                const firstName = data.user.user_nombre.split(' ')[0];
+                localStorage.setItem('user_name_cache', firstName);
+                localStorage.setItem('cart_count_cache', '0'); // Empezamos en 0
 
-                // Redirigimos al dashboard (shop)
                 window.location.href = '/shop';
-            } else {
-                // ERROR
-                const alerta = document.getElementById('alertError');
-                alerta.innerText = data.message || 'Error en credenciales';
-                alerta.classList.remove('d-none');
             }
         } catch (error) {
             console.error('Error:', error);

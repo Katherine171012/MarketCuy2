@@ -60,12 +60,30 @@
 
         // 1. Cargar datos
         async function fetchCart() {
+            // Intentamos cargar lo que hay en cache primero
+            const cachedItems = localStorage.getItem('cart_items_cache');
+            if (cachedItems) {
+                renderCart(JSON.parse(cachedItems)); // ¡PUM! Aparecen los productos al instante
+            }
+
             try {
                 const response = await fetch('/api/cart/data', {
                     headers: { 'Authorization': `Bearer ${getToken()}` }
                 });
                 const cart = await response.json();
+
+                // Guardamos en cache para la próxima vez
+                localStorage.setItem('cart_items_cache', JSON.stringify(cart.items || {}));
+
+                // Actualizamos con datos reales del servidor (por si algo cambió)
                 renderCart(cart.items || {});
+
+                // Actualizamos también el numerito del navbar
+                let totalQty = 0;
+                Object.values(cart.items || {}).forEach(i => totalQty += i.cantidad);
+                localStorage.setItem('cart_count_cache', totalQty);
+                if(document.getElementById('cartCounter')) document.getElementById('cartCounter').innerText = totalQty;
+
             } catch (error) {
                 console.error("Error cargando carrito:", error);
             }

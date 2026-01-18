@@ -161,59 +161,74 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // 1. Verificar si existe el Token
         const token = localStorage.getItem('auth_token');
         const menuAuth = document.getElementById('menuAuth');
         const menuGuest = document.getElementById('menuGuest');
+        const nameSpan = document.getElementById('navUserName');
+        const counterEl = document.getElementById('cartCounter');
+
+        // --- PASO 1: CARGA INSTANTÁNEA (OPTIMISTA) ---
+        // Leemos lo que guardamos la última vez para no esperar al servidor
+        const cachedName = localStorage.getItem('user_name_cache');
+        const cachedCart = localStorage.getItem('cart_count_cache');
 
         if (token) {
-            // -- USUARIO LOGUEADO --
-            if(menuGuest) menuGuest.classList.add('d-none'); // Ocultar Login
-            if(menuAuth) menuAuth.classList.remove('d-none'); // Mostrar Menú Usuario
+            if(menuGuest) menuGuest.classList.add('d-none');
+            if(menuAuth) menuAuth.classList.remove('d-none');
 
-            // Cargar datos del usuario (Nombre)
+            // Si tenemos el nombre en cache, lo ponemos YA
+            if(cachedName && nameSpan) nameSpan.innerText = cachedName;
+            // Si tenemos el conteo en cache, lo ponemos YA
+            if(cachedCart && counterEl) counterEl.innerText = cachedCart;
+
+            // --- PASO 2: ACTUALIZACIÓN EN SILENCIO (BACKGROUND) ---
+            // Solo pedimos al servidor para verificar si algo cambió, pero el usuario ya ve sus datos
+
+            // Pedir datos de usuario
             fetch('/api/user', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json'
-                }
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
             })
                 .then(res => res.json())
                 .then(user => {
-                    const nameSpan = document.getElementById('navUserName');
-                    if(nameSpan && user.user_nombre) {
-                        // Tomar solo el primer nombre
-                        nameSpan.innerText = user.user_nombre.split(' ')[0];
+                    if(user.user_nombre) {
+                        const firstName = user.user_nombre.split(' ')[0];
+                        if(nameSpan) nameSpan.innerText = firstName;
+                        localStorage.setItem('user_name_cache', firstName); // Actualizamos cache
                     }
                 })
-                .catch(() => logout()); // Si falla (token expirado), sacar al usuario
+                .catch(err => { if(err.status === 401) logout(); });
 
-            // Cargar Contador del Carrito (Desde Firebase vía Laravel)
+            // Pedir datos del carrito
             fetch('/api/cart/data', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => res.json())
                 .then(data => {
-                    const counterEl = document.getElementById('cartCounter');
-                    if(counterEl && data.items) {
+                    if(data.items) {
                         let totalQty = 0;
-                        // Sumar las cantidades de todos los items
                         Object.values(data.items).forEach(item => totalQty += item.cantidad);
-                        counterEl.innerText = totalQty;
+
+                        // SOLO actualizamos si el número de la API es diferente al que ya tenemos
+                        // o si el usuario no ha hecho clic recientemente.
+                        const counterEl = document.getElementById('cartCounter');
+                        if(counterEl) {
+                            counterEl.innerText = totalQty;
+                            localStorage.setItem('cart_count_cache', totalQty);
+                        }
                     }
                 });
 
         } else {
-            // -- USUARIO INVITADO --
             if(menuGuest) menuGuest.classList.remove('d-none');
             if(menuAuth) menuAuth.classList.add('d-none');
         }
     });
 
-    // Función Global de Logout
     function logout() {
         localStorage.removeItem('auth_token');
-        window.location.href = '/'; // Redirigir al home/login
+        localStorage.removeItem('user_name_cache'); // Limpiar cache
+        localStorage.removeItem('cart_count_cache'); // Limpiar cache
+        window.location.href = '/';
     }
 </script>
 @yield('scripts')

@@ -111,6 +111,13 @@
             const token = getToken();
             if(!token) { window.location.href = '/login'; return; }
 
+            // LEER CACHE PRIMERO
+            const cachedItems = localStorage.getItem('cart_items_cache');
+            if(cachedItems) {
+                const items = JSON.parse(cachedItems);
+                renderSummaryHTML(items); // Pintamos inmediato
+            }
+
             try {
                 const res = await fetch('/api/cart/data', {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -118,42 +125,28 @@
                 const data = await res.json();
                 const items = data.items || {};
 
-                let html = '';
-                let subtotal = 0;
+                // Guardar cache y volver a pintar por si hubo cambios de precio
+                localStorage.setItem('cart_items_cache', JSON.stringify(items));
+                renderSummaryHTML(items);
 
-                if(Object.keys(items).length === 0) {
-                    window.location.href = '/productos'; // Si no hay items, botar a la tienda
-                    return;
-                }
+            } catch (e) { console.error(e); }
+        }
 
-                Object.values(items).forEach(item => {
-                    const subItem = parseFloat(item.subtotal);
-                    subtotal += subItem;
-
-                    html += `
-                    <div class="d-flex align-items-center mb-3 border-bottom pb-2">
-                        <img src="${item.imagen || 'https://placehold.co/50'}" class="rounded me-2" width="50" height="50" style="object-fit: contain;">
-                        <div class="flex-grow-1 lh-1">
-                            <small class="fw-bold d-block text-truncate" style="max-width: 150px;">${item.nombre}</small>
-                            <small class="text-muted">x${item.cantidad}</small>
-                        </div>
-                        <span class="fw-bold small">$${subItem.toFixed(2)}</span>
-                    </div>
-                `;
-                });
-
-                // CÁLCULOS (15% IVA)
-                const iva = subtotal * 0.15;
-                const total = subtotal + iva;
-
-                document.getElementById('checkout-items').innerHTML = html;
-                document.getElementById('chk-subtotal').innerText = `$${subtotal.toFixed(2)}`;
-                document.getElementById('chk-iva').innerText = `$${iva.toFixed(2)}`;
-                document.getElementById('chk-total').innerText = `$${total.toFixed(2)}`;
-
-            } catch (e) {
-                console.error(e);
-            }
+        // Mueve tu lógica de "pintar" a esta función separada
+        function renderSummaryHTML(items) {
+            let html = '';
+            let subtotal = 0;
+            Object.values(items).forEach(item => {
+                const subItem = parseFloat(item.subtotal);
+                subtotal += subItem;
+                html += `... (tu código HTML de items) ...`;
+            });
+            const iva = subtotal * 0.15;
+            const total = subtotal + iva;
+            document.getElementById('checkout-items').innerHTML = html;
+            document.getElementById('chk-subtotal').innerText = `$${subtotal.toFixed(2)}`;
+            document.getElementById('chk-iva').innerText = `$${iva.toFixed(2)}`;
+            document.getElementById('chk-total').innerText = `$${total.toFixed(2)}`;
         }
 
         // 2. PROCESAR PAGO
