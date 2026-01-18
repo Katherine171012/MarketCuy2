@@ -139,7 +139,17 @@
             Object.values(items).forEach(item => {
                 const subItem = parseFloat(item.subtotal);
                 subtotal += subItem;
-                html += `... (tu código HTML de items) ...`;
+                html += `
+            <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                <img src="${item.imagen || 'https://placehold.co/50'}" class="rounded me-2" width="50" height="50" style="object-fit: contain;">
+                <div class="flex-grow-1 lh-1">
+                    <small class="fw-bold d-block text-truncate" style="max-width: 150px;">${item.nombre}</small>
+                    <small class="text-muted">x${item.cantidad}</small>
+                </div>
+                <span class="fw-bold small">$${subItem.toFixed(2)}</span>
+            </div>
+        `;
+
             });
             const iva = subtotal * 0.15;
             const total = subtotal + iva;
