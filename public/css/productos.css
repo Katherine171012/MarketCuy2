@@ -42,13 +42,14 @@ body { background-color: #f7f7fb; }
     color: var(--concho);
     text-decoration:none;
 }
-.shop-brand .logo{
-    width:36px; height:36px;
-    border-radius: 50%;
-    background: var(--concho);
-    display:grid; place-items:center;
-    color:#fff;
+
+.brand-logo{
+    width:50px;
+    height:50px;
+    object-fit:contain;
+    display:block;
 }
+
 .shop-nav .nav-link{
     color:#555 !important;
     font-weight:600;
@@ -89,10 +90,15 @@ body { background-color: #f7f7fb; }
 }
 
 /* ========= HERO PRODUCTOS ========= */
-.shop-hero{
+.mod-productos .shop-hero{
     background:
         linear-gradient(90deg, rgba(0,0,0,.55), rgba(0,0,0,.15)),
-        url("../images/Cuy.png");
+        url("../images/Cuy.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center 38% !important;
+    background-size: cover !important;
+    min-height: 320px !important;
+    padding: 40px 0 !important;
 }
 
 .shop-hero h1{
@@ -106,6 +112,12 @@ body { background-color: #f7f7fb; }
     padding-bottom: 10px;
 }
 
+.mod-productos .shop-hero .hero-title{
+    font-weight: 900;
+    font-size: clamp(38px, 5vw, 74px);
+    letter-spacing: .5px;
+    text-shadow: 0 6px 24px rgba(0,0,0,.45);
+}
 /* ========= SIDEBAR PRODUCTOS (TU ESTILO ANTIGUO) ========= */
 .shop-side{
     background:#fff;

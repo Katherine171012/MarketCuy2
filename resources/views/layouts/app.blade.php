@@ -35,7 +35,7 @@
 <nav class="navbar navbar-expand-lg shop-nav sticky-top py-3">
     <div class="container">
         <a class="shop-brand" href="{{ $homeUrl }}">
-            <span class="logo"><i class="fa-solid fa-cart-shopping"></i></span>
+            <img src="{{ asset('images/logo.png') }}" alt="MarketCuy" class="brand-logo">
             <span>MarketCuy</span>
         </a>
 
@@ -97,7 +97,7 @@
 @if($esProductos)
     <div class="shop-hero">
         <div class="container">
-            <h1 class="display-6 mb-0">Nuestros Productos</h1>
+            <h1 class="hero-title mb-0">Nuestros<br>Productos</h1>
         </div>
     </div>
 @endif
@@ -113,7 +113,8 @@
         <div class="row g-4">
             <div class="col-12 col-md-4">
                 <h5 class="fw-bold mb-3">
-                    <i class="fa-solid fa-cart-shopping me-2"></i> MarketCuy
+                    <img src="{{ asset('images/logo.png') }}" alt="MarketCuy" style="width:18px;height:18px;object-fit:contain;margin-right:8px;">
+                    MarketCuy
                 </h5>
                 <p class="small text-muted">
                     Tu supermercado en casa. Productos frescos y de calidad directo a tu puerta.
