@@ -108,7 +108,7 @@
 
         <script>
             (function(){
-                // --- 1. Lógica de los botones + y - (Cantidad) ---
+                // 1. Lógica de los botones + y - (Cantidad)
                 const qtyEl = document.getElementById('qty');
                 const btnMinus = document.getElementById('btnMinus');
                 const btnPlus = document.getElementById('btnPlus');
@@ -125,38 +125,75 @@
                     });
                 }
 
-                // --- 2. Lógica del Botón "Añadir al Carrito" ---
+                // 2. Lógica del Botón "Agregar al Carrito" (CONEXIÓN REAL)
+                // ... (Lógica de cantidad + y - se mantiene igual) ...
+
                 const btnAdd = document.getElementById('btnAddToCart');
 
                 if(btnAdd) {
-                    btnAdd.addEventListener('click', () => {
+                    btnAdd.addEventListener('click', () => { // Quitamos el async aquí para que no bloquee
 
-                        // A) VERIFICAMOS SI EL USUARIO ESTÁ LOGUEADO
+                        // 1. VALIDAR TOKEN (Esto es local, es instantáneo)
                         const token = localStorage.getItem('auth_token');
-
                         if (!token) {
-                            // SI NO TIENE TOKEN: Lo mandamos al Login
-                            const irAlLogin = confirm("Debes iniciar sesión para comprar.\n\n¿Quieres ir al Login ahora?");
-
-                            if (irAlLogin) {
-                                // Redirigimos a la ruta raiz donde pusiste el login
-                                window.location.href = "{{ route('login') }}";
-                            }
-                            return; // Detenemos el código aquí.
+                            if (confirm("Inicia sesión para comprar. ¿Ir al Login?")) window.location.href = "/";
+                            return;
                         }
 
-                        // B) SI TIENE TOKEN: (Aquí irá la lógica de Firebase después)
-                        // Por ahora, solo simulamos que funciona.
+                        // 2. UI OPTIMISTA (¡Aquí está el truco!)
+                        // Asumimos que todo saldrá bien y actualizamos la pantalla YA.
 
-                        const producto = {
-                            id: btnAdd.getAttribute('data-id'),
-                            nombre: btnAdd.getAttribute('data-nombre'),
-                            precio: btnAdd.getAttribute('data-precio'),
-                            cantidad: cantidadActual
-                        };
+                        // A. Actualizar contador del navbar visualmente
+                        const counterEl = document.getElementById('cartCounter');
+                        if(counterEl) {
+                            let current = parseInt(counterEl.innerText || 0);
+                            counterEl.innerText = current + cantidadActual; // Sumamos al instante
+                        }
 
-                        console.log("Usuario autenticado. Listo para enviar a Firebase:", producto);
-                        alert(` Producto listo para agregar al carrito (Firebase).\n\nUsuario autorizado.`);
+                        // B. Feedback visual inmediato (sin esperar a Laravel)
+                        const btnTextOriginal = btnAdd.innerHTML;
+                        btnAdd.innerHTML = '<i class="fa-solid fa-check"></i> ¡Agregado!';
+                        btnAdd.classList.remove('btn-concho');
+                        btnAdd.classList.add('btn-success');
+
+                        // C. Restaurar botón después de 2 segundos
+                        setTimeout(() => {
+                            btnAdd.innerHTML = btnTextOriginal;
+                            btnAdd.classList.remove('btn-success');
+                            btnAdd.classList.add('btn-concho');
+                        }, 2000);
+
+                        // 3. ENVÍO EN SEGUNDO PLANO (Fire and Forget)
+                        // Enviamos la petición pero NO detenemos la pantalla esperando respuesta
+                        fetch('/api/cart-add', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                                id_producto: btnAdd.getAttribute('data-id').trim(),
+                                nombre: btnAdd.getAttribute('data-nombre'),
+                                precio: btnAdd.getAttribute('data-precio'),
+                                cantidad: cantidadActual,
+                                imagen: "{{ !empty($productoVer->pro_imagen) ? asset('storage/' . $productoVer->pro_imagen) : 'https://placehold.co/100' }}"
+                            })
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    // SOLO SI FALLA: Revertimos los cambios y avisamos
+                                    console.error("Falló el guardado en segundo plano");
+                                    alert("Hubo un error guardando en el carrito. Por favor intenta de nuevo.");
+                                    if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual; // Restamos lo que sumamos falsamente
+                                }
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                // Revertir cambios visuales si hay error de red
+                                if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual;
+                            });
+
+                        // ¡Listo! El usuario ya sintió que fue instantáneo.
                     });
                 }
             })();

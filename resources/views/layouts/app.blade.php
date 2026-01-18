@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('titulo', 'MarketCuy')</title>
 
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     {{-- CSS GLOBAL (para todo: home, productos, contacto, etc.) --}}
@@ -17,15 +19,16 @@
 
     $esPortada     = ($p === '' || request()->routeIs('home'));
     $esProductos   = ($p === 'productos' || str_starts_with($p, 'productos/'));
-    $esContacto    = ($p === 'contacto' || str_starts_with($p, 'contacto/')); // por si luego creas ruta
+    $esContacto    = ($p === 'contacto' || str_starts_with($p, 'contacto/'));
 
     $clasesBody = [];
     if ($esPortada)   $clasesBody[] = 'mod-portada';
     if ($esProductos) $clasesBody[] = 'mod-productos';
     if ($esContacto)  $clasesBody[] = 'mod-contacto';
 
-    $homeUrl = route('home');
-    $productosUrl = route('productos.index');
+    // Definimos rutas seguras (usando url() por si no tienes named routes definidas aún)
+    $homeUrl = url('/');
+    $productosUrl = url('/productos');
 @endphp
 
 <body class="{{ implode(' ', $clasesBody) }}">
@@ -33,6 +36,7 @@
 {{-- ================= NAVBAR (GLOBAL) ================= --}}
 <nav class="navbar navbar-expand-lg shop-nav sticky-top py-3">
     <div class="container">
+        {{-- 1. LOGO --}}
         <a class="shop-brand" href="{{ $homeUrl }}">
             <span class="logo"><i class="fa-solid fa-cart-shopping"></i></span>
             <span>MarketCuy</span>
@@ -43,6 +47,7 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navShop">
+            {{-- 2. MENÚ CENTRAL --}}
             <ul class="navbar-nav mx-auto gap-lg-3">
                 <li class="nav-item">
                     <a class="nav-link {{ $esPortada ? 'fw-bold text-concho' : '' }}" href="{{ $homeUrl }}">Inicio</a>
@@ -55,11 +60,36 @@
                 </li>
             </ul>
 
+            {{-- 3. ZONA DERECHA (Usuario / Login / Carrito) --}}
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-light border" type="button" disabled title="Carrito (demo)">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                </button>
-                <button class="btn btn-concho px-4" type="button" disabled>Iniciar sesión</button>
+
+                {{-- A) PARA INVITADOS (NO LOGUEADOS) --}}
+                <div id="menuGuest" class="d-flex align-items-center gap-3">
+                    <a href="{{ url('/login') }}" class="btn btn-concho px-4">Iniciar sesión</a>
+                </div>
+
+                {{-- B) PARA USUARIOS (LOGUEADOS) --}}
+                <div id="menuAuth" class="d-none align-items-center gap-3">
+
+                    {{-- Botón Carrito con Contador Real --}}
+                    <a href="{{ url('/cart/view') }}" class="btn btn-light border position-relative text-dark">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <span id="cartCounter" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            0
+                        </span>
+                    </a>
+
+                    <div class="vr mx-2"></div> {{-- Línea separadora vertical --}}
+
+                    <span class="small fw-bold text-secondary">
+                        Hola, <span id="navUserName">Usuario</span>
+                    </span>
+
+                    <button onclick="logout()" class="btn btn-outline-danger btn-sm" title="Cerrar Sesión">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -80,6 +110,7 @@
     @yield('content')
 </main>
 
+{{-- ================= FOOTER COMPLETO ================= --}}
 <footer class="footer-main py-5 mt-5">
     <div class="container">
         <div class="row g-4">
@@ -130,5 +161,67 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{{-- ============================================================ --}}
+{{-- 🔴 SCRIPT DE AUTENTICACIÓN Y CARRITO 🔴 --}}
+{{-- ============================================================ --}}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Verificar si existe el Token
+        const token = localStorage.getItem('auth_token');
+        const menuAuth = document.getElementById('menuAuth');
+        const menuGuest = document.getElementById('menuGuest');
+
+        if (token) {
+            // -- USUARIO LOGUEADO --
+            if(menuGuest) menuGuest.classList.add('d-none'); // Ocultar Login
+            if(menuAuth) menuAuth.classList.remove('d-none'); // Mostrar Menú Usuario
+
+            // Cargar datos del usuario (Nombre)
+            fetch('/api/user', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            })
+                .then(res => res.json())
+                .then(user => {
+                    const nameSpan = document.getElementById('navUserName');
+                    if(nameSpan && user.user_nombre) {
+                        // Tomar solo el primer nombre
+                        nameSpan.innerText = user.user_nombre.split(' ')[0];
+                    }
+                })
+                .catch(() => logout()); // Si falla (token expirado), sacar al usuario
+
+            // Cargar Contador del Carrito (Desde Firebase vía Laravel)
+            fetch('/api/cart/data', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const counterEl = document.getElementById('cartCounter');
+                    if(counterEl && data.items) {
+                        let totalQty = 0;
+                        // Sumar las cantidades de todos los items
+                        Object.values(data.items).forEach(item => totalQty += item.cantidad);
+                        counterEl.innerText = totalQty;
+                    }
+                });
+
+        } else {
+            // -- USUARIO INVITADO --
+            if(menuGuest) menuGuest.classList.remove('d-none');
+            if(menuAuth) menuAuth.classList.add('d-none');
+        }
+    });
+
+    // Función Global de Logout
+    function logout() {
+        localStorage.removeItem('auth_token');
+        window.location.href = '/'; // Redirigir al home/login
+    }
+</script>
+
 </body>
 </html>
