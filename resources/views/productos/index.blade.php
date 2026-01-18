@@ -201,8 +201,32 @@
             <div class="col-12 col-lg-9">
 
                 {{-- ✅ SECCIÓN OFERTAS (PROMOS) --}}
-                @if(isset($ofertas) && $ofertas->count() > 0)
-                    <div class="mb-4">
+                @php
+                    $catFiltro = request('categoria', request('id_categoria'));
+                    $qFiltro   = request('q');
+                    $umFiltro  = request('unidad_medida');
+                    $ordFiltro = request('orden');
+
+                    // Categoría "Todas" la consideramos NO filtro
+                    $catVal = strtolower(trim((string)($catFiltro ?? '')));
+                    $catActivo = ($catVal !== '' && !in_array($catVal, ['0','all','todas','toda','*'], true));
+
+                    // Orden "por defecto" NO debe contar como filtro (normalmente id_asc)
+                    $ordVal = strtolower(trim((string)($ordFiltro ?? '')));
+                    $ordenActivo = ($ordVal !== '' && !in_array($ordVal, ['id_asc','default'], true));
+
+                    // Unidad vacía o "todas" NO cuenta como filtro
+                    $umVal = strtolower(trim((string)($umFiltro ?? '')));
+                    $unidadActiva = ($umVal !== '' && !in_array($umVal, ['all','todas','toda','*'], true));
+
+                    $hayFiltros = $catActivo
+                        || ($qFiltro !== null && trim((string)$qFiltro) !== '')
+                        || $unidadActiva
+                        || $ordenActivo;
+                @endphp
+
+            @if(!$hayFiltros && isset($ofertas) && $ofertas->count() > 0)
+                    <div class="mb-4" id="ofertasSection">
                         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
                             <h5 class="fw-bold mb-0">Ofertas del día</h5>
                             <span class="text-muted small fw-bold">Aprovecha antes que se acaben</span>
@@ -234,9 +258,9 @@
                                             <div class="product-title">{{ $o->pro_nombre }}</div>
 
                                             <div class="price mb-3">
-                                                <span class="precio-antes me-2">
-                                                    ${{ number_format((float) $o->pro_precio_antes, 2) }}
-                                                </span>
+                                <span class="precio-antes me-2">
+                                    ${{ number_format((float) $o->pro_precio_antes, 2) }}
+                                </span>
                                                 ${{ number_format((float) $o->pro_precio_venta, 2) }}
                                             </div>
 
@@ -335,17 +359,32 @@
                 const range = document.getElementById('rangePrecio');
                 const lbl = document.getElementById('lblPrecio');
                 const items = Array.from(document.querySelectorAll('.producto-item'));
+                const ofertasSection = document.getElementById('ofertasSection');
+
+                const maxDefault = range
+                    ? parseFloat(range.max || range.getAttribute('max') || range.value || '0')
+                    : null;
 
                 function aplicar(){
                     const max = range ? parseFloat(range.value || '999999') : Infinity;
 
+                    // Filtra productos por precio
                     items.forEach(el => {
                         const precio = parseFloat(el.getAttribute('data-precio') || '0');
                         el.style.display = (precio <= max) ? '' : 'none';
                     });
 
+                    // Label del slider
                     if(lbl && range){
                         lbl.textContent = 'Hasta $' + parseFloat(range.value || '0').toFixed(2);
+                    }
+
+                    // ✅ Ocultar ofertas si el usuario movió el precio
+                    // y restaurar cuando vuelve al máximo ("Todas")
+                    if(ofertasSection && range && maxDefault !== null){
+                        const sliderActual = parseFloat(range.value || '0');
+                        const mostrarOfertas = (sliderActual >= maxDefault); // solo al máximo
+                        ofertasSection.style.display = mostrarOfertas ? '' : 'none';
                     }
                 }
 
@@ -353,6 +392,5 @@
                 aplicar();
             })();
         </script>
-
     @endif
 @endsection
