@@ -51,7 +51,10 @@
                     <a class="nav-link {{ $esProductos ? 'fw-bold text-concho' : '' }}" href="{{ $productosUrl }}">Productos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ $esContacto ? 'fw-bold text-concho' : '' }}" href="#" onclick="return false;">Contacto</a>
+                    <a class="nav-link {{ $esContacto ? 'fw-bold text-concho' : '' }}"
+                       href="{{ route('contacto.index') }}">
+                        Contacto
+                    </a>
                 </li>
             </ul>
 
@@ -97,7 +100,7 @@
                 <ul class="footer-links list-unstyled">
                     <li><a href="{{ $homeUrl }}">Inicio</a></li>
                     <li><a href="{{ $productosUrl }}">Productos</a></li>
-                    <li><a href="#" onclick="return false;">Contacto</a></li>
+                    <li><a href="{{ route('contacto.index') }}">Contacto</a></li>
                 </ul>
             </div>
 
