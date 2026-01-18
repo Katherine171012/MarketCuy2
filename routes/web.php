@@ -75,3 +75,7 @@ Route::prefix('productos')->group(function () {
     Route::put('/{id}', [ProductoController::class, 'update'])->name('productos.update');
     Route::delete('/{id}', [ProductoController::class, 'destroy'])->name('productos.destroy');
 });
+
+
+Route::get('/contacto', [ContactoController::class, 'index'])->name('contacto.index');
+Route::post('/contacto', [ContactoController::class, 'store'])->name('contacto.store');

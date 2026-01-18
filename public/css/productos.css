@@ -343,3 +343,738 @@ body { background-color: #f7f7fb; }
     font-weight: 400;
     color: #999;
 }
+
+/* =========================================================
+   HERO CONTACTO – VERSIÓN ÚNICA Y FUNCIONAL
+   ========================================================= */
+
+.hero-contacto {
+    position: relative;
+    width: 100%;
+    height: 350px;
+    margin-top: 0;
+
+    /* Respeta la imagen inline del Blade */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center 30%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    /* Transiciones suaves para animación al scroll */
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform;
+}
+
+/* Overlay con degradado */
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.65) 0%,
+        rgba(0, 0, 0, 0.45) 45%,
+        rgba(0, 0, 0, 0.15) 100%
+    );
+    z-index: 1;
+}
+
+/* Contenedor interno */
+.hero-inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+}
+
+/* Contenido del hero */
+.hero-content {
+    color: #ffffff;
+    max-width: 780px;
+    padding: 28px 0;
+}
+
+/* Título */
+.hero-content h1 {
+    font-size: 50px;
+    font-weight: 900;
+    margin: 0 0 10px;
+    line-height: 1.08;
+    letter-spacing: -0.4px;
+    text-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+
+/* Subtítulo */
+.hero-content p {
+    font-size: 20px;
+    margin: 0;
+    line-height: 1.55;
+    opacity: 0.95;
+    text-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* Animación al hacer scroll */
+body.scrolled .hero-contacto {
+    opacity: 0.2;
+    transform: translateY(-30px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-contacto {
+        height: 280px;
+    }
+
+    body.scrolled .hero-contacto {
+        opacity: 0.4;
+        transform: translateY(-15px);
+    }
+
+    .hero-content h1 {
+        font-size: 30px;
+    }
+
+    .hero-content p {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-contacto {
+        height: 240px;
+        background-position: center 85%;
+    }
+}
+
+/* =========================================================
+   MÓDULO CONTACTO - DISEÑO MODERNO E-COMMERCE
+   ========================================================= */
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
+.contacto-wrapper {
+    padding: 60px 0 80px;
+    background-color: #f7f7fb;
+}
+
+/* ===== SECCIÓN PRINCIPAL (2 COLUMNAS) ===== */
+.seccion-principal-contacto {
+    margin-bottom: 80px;
+}
+
+/* ===== TARJETA FORMULARIO (IZQUIERDA) ===== */
+.tarjeta-formulario {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 45px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.titulo-formulario {
+    color: var(--concho);
+    font-weight: 800;
+    font-size: 28px;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+}
+
+.subtitulo-formulario {
+    color: #6c757d;
+    font-size: 15px;
+    margin-bottom: 0;
+    line-height: 1.6;
+}
+
+/* Inputs del formulario */
+.form-control-contacto {
+    border: 1.5px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
+}
+
+.form-control-contacto:focus {
+    border-color: var(--concho);
+    box-shadow: 0 0 0 3px rgba(102, 4, 4, 0.08);
+    background-color: #ffffff;
+}
+
+.form-control-contacto.is-valid {
+    border-color: #28a745;
+    background-color: #f0fdf4;
+}
+
+.form-control-contacto.is-invalid {
+    border-color: #dc3545;
+    background-color: #fef2f2;
+}
+
+/* Labels */
+.form-label {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+/* ===== BOTONES TIPO CONSULTA ===== */
+.tipo-consulta-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.tipo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 50px;
+    background: #ffffff;
+    color: #555;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.tipo-btn:hover {
+    border-color: var(--concho);
+    background: rgba(102, 4, 4, 0.04);
+    color: var(--concho);
+    transform: translateY(-2px);
+}
+
+.tipo-btn.active {
+    border-color: var(--concho);
+    background: var(--concho);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(102, 4, 4, 0.3);
+}
+
+.tipo-btn i {
+    font-size: 16px;
+}
+
+/* ===== TARJETA INFORMACIÓN (DERECHA) ===== */
+.tarjeta-info-contacto {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 35px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.titulo-info-contacto {
+    color: var(--concho);
+    font-weight: 800;
+    font-size: 20px;
+    margin-bottom: 0;
+}
+
+/* Items de información */
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.info-icono {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--concho) 0%, var(--concho-2) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 20px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(102, 4, 4, 0.25);
+}
+
+.info-contenido {
+    flex: 1;
+}
+
+.info-titulo {
+    font-weight: 700;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.info-texto {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+}
+
+/* ===== BLOQUE ¿NECESITAS AYUDA? ===== */
+.bloque-ayuda {
+    background: linear-gradient(135deg, var(--concho) 0%, var(--concho-2) 100%);
+    border-radius: 20px;
+    padding: 35px;
+    text-align: center;
+    color: #ffffff;
+    box-shadow: 0 10px 35px rgba(102, 4, 4, 0.35);
+    position: relative;
+    overflow: hidden;
+}
+
+.bloque-ayuda::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.ayuda-icono-grande {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: #ffffff;
+    backdrop-filter: blur(10px);
+}
+
+.ayuda-titulo {
+    font-weight: 800;
+    font-size: 22px;
+    margin-bottom: 12px;
+    color: #ffffff;
+}
+
+.ayuda-texto {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    opacity: 0.95;
+}
+
+.ayuda-contactos {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.ayuda-boton {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.ayuda-boton:hover {
+    background: #ffffff;
+    color: var(--concho);
+    transform: translateY(-4px) scale(1.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== SECCIÓN FAQ ===== */
+.seccion-faqs {
+    margin-top: 80px;
+    padding-top: 60px;
+    border-top: 2px solid #e8e8e8;
+}
+
+.titulo-faqs {
+    color: var(--concho);
+    font-weight: 800;
+    font-size: 32px;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+}
+
+.subtitulo-faqs {
+    color: #6c757d;
+    font-size: 16px;
+    margin-bottom: 0;
+}
+
+.faq-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Items del Accordion */
+.faq-item {
+    background: #ffffff;
+    border: none;
+    border-radius: 16px !important;
+    margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.faq-item:hover {
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.faq-button {
+    background: #ffffff;
+    border: none;
+    padding: 20px 24px;
+    font-weight: 700;
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.faq-button:not(.collapsed) {
+    background: linear-gradient(135deg, var(--concho) 0%, var(--concho-2) 100%);
+    color: #ffffff;
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.faq-button:hover {
+    background: rgba(102, 4, 4, 0.05);
+}
+
+.faq-button:not(.collapsed):hover {
+    background: linear-gradient(135deg, var(--concho-2) 0%, var(--concho) 100%);
+}
+
+.faq-button i {
+    color: var(--concho);
+    font-size: 20px;
+    transition: color 0.3s ease;
+}
+
+.faq-button:not(.collapsed) i {
+    color: #ffffff;
+}
+
+.faq-button::after {
+    margin-left: auto;
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    content: '\f078';
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.faq-button:not(.collapsed)::after {
+    transform: rotate(180deg);
+}
+
+.faq-body {
+    padding: 24px;
+    background: #fafafa;
+    color: #555;
+    font-size: 15px;
+    line-height: 1.7;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* ===== ALERTAS PERSONALIZADAS ===== */
+.alert {
+    border-radius: 16px;
+    border: none;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 991px) {
+    .tarjeta-formulario {
+        padding: 35px 25px;
+        margin-bottom: 30px;
+    }
+
+    .titulo-formulario {
+        font-size: 24px;
+    }
+
+    .tarjeta-info-contacto {
+        padding: 30px 25px;
+    }
+
+    .bloque-ayuda {
+        padding: 30px 25px;
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 767px) {
+    .contacto-wrapper {
+        padding: 40px 0 60px;
+    }
+
+    .tarjeta-formulario {
+        padding: 30px 20px;
+        border-radius: 20px;
+    }
+
+    .titulo-formulario {
+        font-size: 22px;
+    }
+
+    .subtitulo-formulario {
+        font-size: 14px;
+    }
+
+    .tipo-consulta-wrapper {
+        gap: 10px;
+    }
+
+    .tipo-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .tarjeta-info-contacto {
+        padding: 25px 20px;
+        border-radius: 18px;
+    }
+
+    .titulo-info-contacto {
+        font-size: 18px;
+    }
+
+    .info-icono {
+        width: 42px;
+        height: 42px;
+        font-size: 18px;
+    }
+
+    .bloque-ayuda {
+        padding: 25px 20px;
+        border-radius: 18px;
+    }
+
+    .ayuda-titulo {
+        font-size: 20px;
+    }
+
+    .titulo-faqs {
+        font-size: 26px;
+    }
+
+    .seccion-faqs {
+        margin-top: 60px;
+        padding-top: 40px;
+    }
+
+    .faq-button {
+        padding: 16px 18px;
+        font-size: 15px;
+    }
+
+    .faq-body {
+        padding: 20px 18px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tipo-btn {
+        flex: 1 1 calc(50% - 6px);
+        justify-content: center;
+        min-width: 140px;
+    }
+
+    .ayuda-contactos {
+        gap: 10px;
+    }
+
+    .ayuda-boton {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+}
+
+/* ===== ANIMACIÓN SHAKE (para errores) ===== */
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-10px);
+    }
+    75% {
+        transform: translateX(10px);
+    }
+}
+
+.shake {
+    animation: shake 0.3s ease;
+}
+
+/* =========================================================
+   SECCIÓN MAPA - ENCUÉNTRANOS
+   ========================================================= */
+
+.seccion-mapa {
+    padding: 80px 0;
+    background: #ffffff;
+}
+
+.titulo-mapa {
+    color: var(--concho);
+    font-weight: 800;
+    font-size: 32px;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+}
+
+.subtitulo-mapa {
+    color: #6c757d;
+    font-size: 16px;
+    margin-bottom: 0;
+}
+
+/* Tarjeta de ubicación */
+.tarjeta-ubicacion {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 35px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    height: 100%;
+}
+
+.ubicacion-item {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.ubicacion-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.ubicacion-icono {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--concho) 0%, var(--concho-2) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 20px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(102, 4, 4, 0.25);
+}
+
+.ubicacion-titulo {
+    font-weight: 700;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.ubicacion-texto {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+/* Contenedor del mapa */
+.mapa-container {
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+    height: 100%;
+    min-height: 450px;
+}
+
+.mapa-container iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 450px;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .seccion-mapa {
+        padding: 60px 0;
+    }
+
+    .tarjeta-ubicacion {
+        padding: 30px 25px;
+        margin-bottom: 30px;
+    }
+
+    .mapa-container {
+        min-height: 400px;
+    }
+}
+
+@media (max-width: 767px) {
+    .titulo-mapa {
+        font-size: 26px;
+    }
+
+    .tarjeta-ubicacion {
+        padding: 25px 20px;
+    }
+
+    .ubicacion-item {
+        gap: 15px;
+        margin-bottom: 25px;
+        padding-bottom: 25px;
+    }
+
+    .ubicacion-icono {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+
+    .mapa-container {
+        min-height: 350px;
+    }
+}
