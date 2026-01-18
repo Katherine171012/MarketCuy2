@@ -152,19 +152,24 @@
         </form>
     </div>
 </div>
-
-<!-- TU JAVASCRIPT ORIGINAL (INTACTO) -->
 <script>
     const form = document.getElementById('loginForm');
+    const alerta = document.getElementById('alertError');
 
     form.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Evitar recarga normal
+        e.preventDefault();
+
+        // UI: Bloquear botón y limpiar errores
+        alerta.classList.add('d-none');
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = "Verificando...";
 
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
         try {
-            // 1. Petición a TU API
             const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: {
@@ -177,16 +182,33 @@
             const data = await response.json();
 
             if (response.ok) {
+                // 1. Guardar Token
                 localStorage.setItem('auth_token', data.token);
-                // Guarda el primer nombre de una vez para que el navbar lo tenga listo
-                const firstName = data.user.user_nombre.split(' ')[0];
-                localStorage.setItem('user_name_cache', firstName);
-                localStorage.setItem('cart_count_cache', '0'); // Empezamos en 0
 
+                // 2. Guardar Nombre (con validación para que no se rompa el JS)
+                if (data.user && data.user.user_nombre) {
+                    const firstName = data.user.user_nombre.split(' ')[0];
+                    localStorage.setItem('user_name_cache', firstName);
+                } else {
+                    localStorage.setItem('user_name_cache', 'Usuario');
+                }
+
+                // 3. Redirigir
                 window.location.href = '/shop';
+
+            } else {
+                // 4. Mostrar error si las credenciales fallan
+                alerta.innerText = data.message || 'Correo o contraseña incorrectos';
+                alerta.classList.remove('d-none');
+                btn.disabled = false;
+                btn.innerText = originalText;
             }
         } catch (error) {
             console.error('Error:', error);
+            alerta.innerText = 'Error de conexión con el servidor';
+            alerta.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerText = originalText;
         }
     });
 </script>
