@@ -241,20 +241,27 @@
             const data = await response.json();
 
             if (response.ok) {
-                // ÉXITO: Guardamos el token
+                // 1. Guardamos el token (lo que ya tenías)
                 localStorage.setItem('auth_token', data.token);
 
-                // Redirigimos directo sin cuadros de alerta molestos
-                window.location.href = '/shop';
-            } else {
-                // ERROR: Si el correo ya existe o la clave es corta, etc.
-                let mensaje = data.message || "Error al registrar";
-
-                if (data.errors) {
-                    // Esto une todos los errores (ej: "El email ya existe. La clave es muy corta.")
-                    mensaje = Object.values(data.errors).flat().join('<br>');
+                // 2. NUEVO: Guardamos el nombre en el cache para que el Navbar sea instantáneo
+                if (data.user && data.user.user_nombre) {
+                    // Tomamos el nombre, sacamos el primero y lo guardamos
+                    const firstName = data.user.user_nombre.split(' ')[0];
+                    localStorage.setItem('user_name_cache', firstName);
+                    localStorage.setItem('cart_count_cache', '0'); // Como es nuevo, empezamos en 0
                 }
 
+                // 3. Redirigimos (lo que ya tenías)
+                window.location.href = '/shop';
+
+            } else {
+                // --- Todo el resto de tu código de error se queda EXACTAMENTE igual ---
+                let mensaje = data.message || "Error al registrar";
+                if (data.errors) {
+                    mensaje = Object.values(data.errors).flat().join('<br>');
+                }
+                const alerta = document.getElementById('alertError');
                 alerta.innerHTML = mensaje;
                 alerta.classList.remove('d-none');
             }
