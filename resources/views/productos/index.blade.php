@@ -140,7 +140,7 @@
 
                             if (irAlLogin) {
                                 // Redirigimos a la ruta raiz donde pusiste el login
-                                window.location.href = '/';
+                                window.location.href = "{{ route('login') }}";
                             }
                             return; // Detenemos el código aquí.
                         }
@@ -211,7 +211,7 @@
 
                                     <div class="product-title">{{ $p->pro_nombre }}</div>
 
-                                    {{-- ✅ SIN ESTRELLAS / REVIEWS --}}
+                                    {{--  SIN ESTRELLAS / REVIEWS --}}
 
                                     <div class="price mb-3">
                                         ${{ number_format((float) $p->pro_precio_venta, 2) }}
