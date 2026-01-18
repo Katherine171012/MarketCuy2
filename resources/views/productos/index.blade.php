@@ -136,7 +136,7 @@
                         // 1. VALIDAR TOKEN (Esto es local, es instantáneo)
                         const token = localStorage.getItem('auth_token');
                         if (!token) {
-                            if (confirm("Inicia sesión para comprar. ¿Ir al Login?")) window.location.href = "/";
+                            window.location.href = "/login";
                             return;
                         }
 
