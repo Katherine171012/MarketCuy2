@@ -32,16 +32,17 @@ class ProductoController extends Controller
         $catId = $request->get('categoria');
 
         if ($catId) {
-            // Caso 1: Vienen del Home con una categoría seleccionada
             $productos = Producto::paginarActivosConFiltros(null, $catId, null, null, $perPage);
         } else {
-            // Caso 2: Entran normal al módulo (Tu lógica original intacta)
             $productos = Producto::obtenerParaLista($perPage);
         }
         $productos->appends($request->except('page'));
 
-        $unidades = UnidadMedida::listar();
+        $unidades   = UnidadMedida::listar();
         $categorias = Categoria::listarActivas();
+
+        // ✅ NUEVO: Ofertas (para mostrar en sección productos)
+        $ofertas = Producto::obtenerOfertas(6);
 
         $editId = $request->get('edit');
         $productoEditar = null;
@@ -87,6 +88,7 @@ class ProductoController extends Controller
             'productos' => $productos,
             'unidades' => $unidades,
             'categorias' => $categorias,
+            'ofertas' => $ofertas, // ✅ NUEVO
             'productoEditar' => $productoEditar,
             'productoEliminar' => $productoEliminar,
             'productoVer' => $productoVer,
@@ -97,7 +99,6 @@ class ProductoController extends Controller
 
     public function store(Request $request)
     {
-        // ✅ ahora el nombre real es pro_nombre
         if (!$request->pro_nombre) {
             return back()->withErrors([
                 'pro_nombre' => $this->msg('M25')
@@ -148,7 +149,6 @@ class ProductoController extends Controller
             ])->withInput();
         }
 
-        // ✅ validar duplicado por pro_nombre
         if (Producto::existeNombre($request->pro_nombre)) {
             return back()->withErrors([
                 'pro_nombre' => $this->msg('M26')
@@ -172,7 +172,6 @@ class ProductoController extends Controller
             $data = $request->all();
             $data['id_producto'] = $nuevoId;
 
-            // ✅ IMAGEN: guardar con nombre = ID del producto
             if ($request->hasFile('pro_imagen') && $request->file('pro_imagen')->isValid()) {
                 $file = $request->file('pro_imagen');
                 $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
@@ -319,8 +318,6 @@ class ProductoController extends Controller
         $orden       = $request->input('orden');
         $idCategoria = $request->input('id_categoria');
         $unidad      = $request->input('unidad_medida');
-
-        // ✅ búsqueda global
         $q           = $request->input('q');
 
         $tieneOrden      = ($orden !== null && $orden !== '');
@@ -328,7 +325,6 @@ class ProductoController extends Controller
         $tieneUnidad     = ($unidad !== null && $unidad !== '');
         $tieneQ          = ($q !== null && trim($q) !== '');
 
-        // ✅ ahora permite buscar solo con q
         if (!$tieneOrden && !$tieneCategoria && !$tieneUnidad && !$tieneQ) {
             return back()->withErrors([
                 'parametros' => $this->msg('M57')
@@ -352,13 +348,17 @@ class ProductoController extends Controller
 
             $productos->appends($request->except('page'));
 
-            $unidades = UnidadMedida::listar();
+            $unidades   = UnidadMedida::listar();
             $categorias = Categoria::listarActivas();
+
+            // ✅ NUEVO: Ofertas (para mostrar en sección productos también)
+            $ofertas = Producto::obtenerOfertas(6);
 
             return $this->viewWithMsgs('productos.index', [
                 'productos' => $productos,
                 'unidades' => $unidades,
                 'categorias' => $categorias,
+                'ofertas' => $ofertas, // ✅ NUEVO
                 'productoEditar' => null,
                 'productoEliminar' => null,
                 'productoVer' => null,

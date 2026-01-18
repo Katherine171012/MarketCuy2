@@ -1085,3 +1085,12 @@ body.scrolled .hero-contacto {
         min-height: 350px;
     }
 }
+/* ====== PROMOS / OFERTAS (FIX visual) ====== */
+.product-card{
+    position: relative;
+}
+
+.precio-antes{
+    text-decoration: line-through;
+    opacity: .85;
+}
