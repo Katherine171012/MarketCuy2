@@ -18,15 +18,20 @@
     $esPortada     = ($p === '' || request()->routeIs('home'));
     $esProductos   = ($p === 'productos' || str_starts_with($p, 'productos/'));
     $esContacto    = ($p === 'contacto' || str_starts_with($p, 'contacto/')); // por si luego creas ruta
+    $esNosotros    = ($p === 'nosotros' || str_starts_with($p, 'nosotros/'));
 
     $clasesBody = [];
     if ($esPortada)   $clasesBody[] = 'mod-portada';
     if ($esProductos) $clasesBody[] = 'mod-productos';
     if ($esContacto)  $clasesBody[] = 'mod-contacto';
+    if ($esNosotros)  $clasesBody[] = 'mod-nosotros';
+
 
     // Definimos rutas seguras (usando url() por si no tienes named routes definidas aún)
     $homeUrl = url('/');
     $productosUrl = url('/productos');
+    $nosotrosUrl = route('nosotros.index');
+
 @endphp
 
 <body class="{{ implode(' ', $clasesBody) }}">
@@ -55,6 +60,11 @@
                     <a class="nav-link {{ $esContacto ? 'fw-bold text-concho' : '' }}"
                        href="{{ route('contacto.index') }}">
                         Contacto
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ $esNosotros ? 'fw-bold text-concho' : '' }}" href="{{ $nosotrosUrl }}">
+                        Nosotros
                     </a>
                 </li>
             </ul>
@@ -127,6 +137,8 @@
                     <li><a href="{{ $homeUrl }}">Inicio</a></li>
                     <li><a href="{{ $productosUrl }}">Productos</a></li>
                     <li><a href="{{ route('contacto.index') }}">Contacto</a></li>
+                    <li><a href="{{ $nosotrosUrl }}">Nosotros</a></li>
+
                 </ul>
             </div>
 
@@ -144,7 +156,7 @@
                 <h6 class="fw-bold mb-3">Contacto</h6>
                 <ul class="list-unstyled small footer-contact">
                     <li class="mb-2"><i class="fa-regular fa-envelope me-2"></i> contacto@marketcuy.com</li>
-                    <li class="mb-2"><i class="fa-solid fa-phone me-2"></i> +593 99 999 9999</li>
+                    <li class="mb-2"><i class="fa-solid fa-phone me-2"></i> +593 98 341 7501</li>
                     <li><i class="fa-solid fa-location-dot me-2"></i> Quito, Ecuador</li>
                 </ul>
             </div>

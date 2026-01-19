@@ -212,7 +212,7 @@
                                         </div>
                                         <div class="info-contenido">
                                             <div class="info-titulo">Email</div>
-                                            <div class="info-texto">esflores@puce.edu.ec</div>
+                                            <div class="info-texto">contacto@marketcuy.com</div>
                                         </div>
                                     </div>
 

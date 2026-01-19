@@ -35,4 +35,11 @@ class HomeController extends Controller
 
         return redirect()->back();
     }
+
+
+    public function nosotros()
+    {
+        return view('nosotros.index');
+    }
 }
+
