@@ -52,20 +52,27 @@
                 <div class="col-lg-6">
                     <span class="badge-cat">{{ $cat }}</span>
 
+                    {{-- ✅ ETIQUETA DE OFERTA (si aplica) --}}
+                    @if($productoVer->tieneDescuento())
+                        <span class="badge-oferta ms-2">{{ $productoVer->etiquetaPromo() }}</span>
+                    @endif
+
                     <div class="detail-title">{{ $productoVer->pro_nombre }}</div>
 
-                    {{-- ✅ SIN ESTRELLAS / REVIEWS --}}
-
                     <div class="price mb-3">
+                        @if($productoVer->tieneDescuento())
+                            <span class="precio-antes me-2">
+                                ${{ number_format((float) $productoVer->pro_precio_antes, 2) }}
+                            </span>
+                        @endif
+
                         ${{ number_format((float) $productoVer->pro_precio_venta, 2) }}
                     </div>
 
-                    {{-- ✅ DESCRIPCIÓN DESDE BD --}}
                     <p class="text-muted mb-3">
                         {{ !empty($desc) ? $desc : 'Sin descripción disponible.' }}
                     </p>
 
-                    {{-- ✅ NO mostrar ID / Stock / Estado --}}
                     <div class="row g-2 mb-3">
                         <div class="col-md-6">
                             <div class="pill w-100">
@@ -93,12 +100,12 @@
                     <button id="btnAddToCart"
                             type="button"
                             class="btn btn-concho product-btn py-3"
-                            {{-- Aquí guardamos los datos que luego enviarás a Firebase --}}
                             data-id="{{ $productoVer->id_producto }}"
                             data-nombre="{{ $productoVer->pro_nombre }}"
                             data-precio="{{ $productoVer->pro_precio_venta }}">
                         <i class="fa-solid fa-cart-shopping me-2"></i> Agregar al Carrito
                     </button>
+
                     <div class="text-muted small mt-2">
                         (Demo visual. Tu módulo actual es inventario/admin.)
                     </div>
@@ -108,7 +115,6 @@
 
         <script>
             (function(){
-                // 1. Lógica de los botones + y - (Cantidad)
                 const qtyEl = document.getElementById('qty');
                 const btnMinus = document.getElementById('btnMinus');
                 const btnPlus = document.getElementById('btnPlus');
@@ -125,53 +131,35 @@
                     });
                 }
 
-                // 2. Lógica del Botón "Agregar al Carrito" (CONEXIÓN REAL)
-                // ... (Lógica de cantidad + y - se mantiene igual) ...
-
                 const btnAdd = document.getElementById('btnAddToCart');
 
                 if(btnAdd) {
-                    btnAdd.addEventListener('click', () => { // Quitamos el async aquí para que no bloquee
-
-                        // 1. VALIDAR TOKEN (Esto es local, es instantáneo)
+                    btnAdd.addEventListener('click', () => {
                         const token = localStorage.getItem('auth_token');
                         if (!token) {
                             window.location.href = "/login";
                             return;
                         }
 
-                        // 2. UI OPTIMISTA (¡Aquí está el truco!)
-                        // Asumimos que todo saldrá bien y actualizamos la pantalla YA.
-
-                        // A. Actualizar contador del navbar visualmente
                         const counterEl = document.getElementById('cartCounter');
                         if(counterEl) {
                             let current = parseInt(counterEl.innerText || 0);
                             let nuevoTotal = current + cantidadActual;
-
-                            // 1. Cambiamos el número en la pantalla
                             counterEl.innerText = nuevoTotal;
-
-                            // 2. ¡IMPORTANTE!: Cambiamos el número en la MEMORIA (cache)
-                            // Esto evita que el script de app.blade.php lo regrese a 8
                             localStorage.setItem('cart_count_cache', nuevoTotal);
                         }
 
-                        // B. Feedback visual inmediato (sin esperar a Laravel)
                         const btnTextOriginal = btnAdd.innerHTML;
                         btnAdd.innerHTML = '<i class="fa-solid fa-check"></i> ¡Agregado!';
                         btnAdd.classList.remove('btn-concho');
                         btnAdd.classList.add('btn-success');
 
-                        // C. Restaurar botón después de 2 segundos
                         setTimeout(() => {
                             btnAdd.innerHTML = btnTextOriginal;
                             btnAdd.classList.remove('btn-success');
                             btnAdd.classList.add('btn-concho');
                         }, 2000);
 
-                        // 3. ENVÍO EN SEGUNDO PLANO (Fire and Forget)
-                        // Enviamos la petición pero NO detenemos la pantalla esperando respuesta
                         fetch('/api/cart-add', {
                             method: 'POST',
                             headers: {
@@ -188,23 +176,18 @@
                         })
                             .then(response => {
                                 if (!response.ok) {
-                                    // SOLO SI FALLA: Revertimos los cambios y avisamos
-                                    console.error("Falló el guardado en segundo plano");
                                     alert("Hubo un error guardando en el carrito. Por favor intenta de nuevo.");
-                                    if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual; // Restamos lo que sumamos falsamente
+                                    if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual;
                                 }
                             })
-                            .catch(err => {
-                                console.error(err);
-                                // Revertir cambios visuales si hay error de red
+                            .catch(() => {
                                 if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual;
                             });
-
-                        // ¡Listo! El usuario ya sintió que fue instantáneo.
                     });
                 }
             })();
         </script>
+
     @else
 
         <div class="row g-4">
@@ -216,6 +199,82 @@
 
             {{-- GRID --}}
             <div class="col-12 col-lg-9">
+
+                {{-- ✅ SECCIÓN OFERTAS (PROMOS) --}}
+                @php
+                    $catFiltro = request('categoria', request('id_categoria'));
+                    $qFiltro   = request('q');
+                    $umFiltro  = request('unidad_medida');
+                    $ordFiltro = request('orden');
+
+                    // Categoría "Todas" la consideramos NO filtro
+                    $catVal = strtolower(trim((string)($catFiltro ?? '')));
+                    $catActivo = ($catVal !== '' && !in_array($catVal, ['0','all','todas','toda','*'], true));
+
+                    // Orden "por defecto" NO debe contar como filtro (normalmente id_asc)
+                    $ordVal = strtolower(trim((string)($ordFiltro ?? '')));
+                    $ordenActivo = ($ordVal !== '' && !in_array($ordVal, ['id_asc','default'], true));
+
+                    // Unidad vacía o "todas" NO cuenta como filtro
+                    $umVal = strtolower(trim((string)($umFiltro ?? '')));
+                    $unidadActiva = ($umVal !== '' && !in_array($umVal, ['all','todas','toda','*'], true));
+
+                    $hayFiltros = $catActivo
+                        || ($qFiltro !== null && trim((string)$qFiltro) !== '')
+                        || $unidadActiva
+                        || $ordenActivo;
+                @endphp
+
+            @if(!$hayFiltros && isset($ofertas) && $ofertas->count() > 0)
+                    <div class="mb-4" id="ofertasSection">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                            <h5 class="fw-bold mb-0">Ofertas del día</h5>
+                            <span class="text-muted small fw-bold">Aprovecha antes que se acaben</span>
+                        </div>
+
+                        <div class="row g-3">
+                            @foreach($ofertas as $o)
+                                @php $catO = $o->categoria?->cat_nombre ?? 'Sin categoría'; @endphp
+
+                                <div class="col-12 col-md-6 col-xl-4">
+                                    <div class="product-card h-100">
+                                        @if($o->tieneDescuento())
+                                            <div class="badge-oferta">{{ $o->etiquetaPromo() }}</div>
+                                        @endif
+
+                                        <div class="imgwrap">
+                                            @if(!empty($o->pro_imagen))
+                                                <img src="{{ asset('storage/' . $o->pro_imagen) }}"
+                                                     alt="Imagen {{ $o->pro_nombre }}">
+                                            @else
+                                                <div class="h-100 d-flex align-items-center justify-content-center text-muted small">
+                                                    Sin imagen
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="p-3">
+                                            <span class="badge-cat">{{ $catO }}</span>
+                                            <div class="product-title">{{ $o->pro_nombre }}</div>
+
+                                            <div class="price mb-3">
+                                <span class="precio-antes me-2">
+                                    ${{ number_format((float) $o->pro_precio_antes, 2) }}
+                                </span>
+                                                ${{ number_format((float) $o->pro_precio_venta, 2) }}
+                                            </div>
+
+                                            <a class="btn btn-concho product-btn"
+                                               href="{{ route('productos.index', ['view' => $o->id_producto]) }}">
+                                                Ver detalles
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
 
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                     <div class="text-muted small fw-bold">
@@ -239,6 +298,12 @@
                         <div class="col-12 col-md-6 col-xl-4 producto-item"
                              data-precio="{{ floatval($p->pro_precio_venta) }}">
                             <div class="product-card h-100">
+
+                                {{-- ✅ BADGE PROMO EN TARJETA (si aplica) --}}
+                                @if($p->tieneDescuento())
+                                    <div class="badge-oferta">{{ $p->etiquetaPromo() }}</div>
+                                @endif
+
                                 <div class="imgwrap">
                                     @if(!empty($p->pro_imagen))
                                         <img src="{{ asset('storage/' . $p->pro_imagen) }}"
@@ -255,9 +320,12 @@
 
                                     <div class="product-title">{{ $p->pro_nombre }}</div>
 
-                                    {{--  SIN ESTRELLAS / REVIEWS --}}
-
                                     <div class="price mb-3">
+                                        @if($p->tieneDescuento())
+                                            <span class="precio-antes me-2">
+                                                ${{ number_format((float) $p->pro_precio_antes, 2) }}
+                                            </span>
+                                        @endif
                                         ${{ number_format((float) $p->pro_precio_venta, 2) }}
                                     </div>
 
@@ -288,21 +356,35 @@
 
         <script>
             (function(){
-                // ✅ Filtro de PRECIO se mantiene (solo UI local)
                 const range = document.getElementById('rangePrecio');
                 const lbl = document.getElementById('lblPrecio');
                 const items = Array.from(document.querySelectorAll('.producto-item'));
+                const ofertasSection = document.getElementById('ofertasSection');
+
+                const maxDefault = range
+                    ? parseFloat(range.max || range.getAttribute('max') || range.value || '0')
+                    : null;
 
                 function aplicar(){
                     const max = range ? parseFloat(range.value || '999999') : Infinity;
 
+                    // Filtra productos por precio
                     items.forEach(el => {
                         const precio = parseFloat(el.getAttribute('data-precio') || '0');
                         el.style.display = (precio <= max) ? '' : 'none';
                     });
 
+                    // Label del slider
                     if(lbl && range){
                         lbl.textContent = 'Hasta $' + parseFloat(range.value || '0').toFixed(2);
+                    }
+
+                    // ✅ Ocultar ofertas si el usuario movió el precio
+                    // y restaurar cuando vuelve al máximo ("Todas")
+                    if(ofertasSection && range && maxDefault !== null){
+                        const sliderActual = parseFloat(range.value || '0');
+                        const mostrarOfertas = (sliderActual >= maxDefault); // solo al máximo
+                        ofertasSection.style.display = mostrarOfertas ? '' : 'none';
                     }
                 }
 
@@ -310,6 +392,5 @@
                 aplicar();
             })();
         </script>
-
     @endif
 @endsection

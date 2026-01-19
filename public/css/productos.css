@@ -1120,4 +1120,12 @@ body.scrolled .hero-contacto {
     .nosotros-hero .display-4{
         -webkit-text-stroke: 1px rgba(0,0,0,.35);
     }
+/* ====== PROMOS / OFERTAS (FIX visual) ====== */
+.product-card{
+    position: relative;
+}
+
+.precio-antes{
+    text-decoration: line-through;
+    opacity: .85;
 }

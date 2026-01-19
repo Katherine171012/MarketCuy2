@@ -95,7 +95,7 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id_user,
                 'id_cliente' => $user->id_cliente,
-                'nombre' => $user->user_nombre
+                'user_nombre' => $user->user_nombre
             ],
             'token' => $token // <--- CAMBIA 'access_token' por 'token'
         ]);

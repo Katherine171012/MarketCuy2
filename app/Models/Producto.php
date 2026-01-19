@@ -36,20 +36,42 @@ class Producto extends Model
         'pro_clicks_count',
         'pro_imagen',
     ];
+
+    // ✅ Promo/Oferta (si el trigger guardó un precio anterior mayor)
     public function tieneDescuento(): bool
     {
         return $this->pro_precio_antes !== null
             && $this->pro_precio_antes > $this->pro_precio_venta;
     }
 
+    // ✅ Etiqueta visible para el usuario (si no hay, usamos "Oferta")
+    public function etiquetaPromo(): string
+    {
+        $t = trim((string) ($this->pro_etiqueta ?? ''));
+        return $t !== '' ? $t : 'Oferta';
+    }
+
+    // ✅ Para mostrar “Ofertas” en la sección productos
+    public static function obtenerOfertas(int $limite = 6)
+    {
+        return self::where('estado_prod', 'ACT')
+            ->whereNotNull('pro_precio_antes')
+            ->whereColumn('pro_precio_antes', '>', 'pro_precio_venta')
+            ->with('categoria')
+            ->orderBy('pro_nombre', 'asc')
+            ->limit($limite)
+            ->get();
+    }
+
     public static function obtenerDestacados(int $limite = 4)
     {
         return self::where('estado_prod', 'ACT')
             ->where('pro_es_destacado', true)
-            ->orderBy('pro_nombre', 'asc') // O random() si prefieres variedad
+            ->orderBy('pro_nombre', 'asc')
             ->limit($limite)
             ->get();
     }
+
     public function unidadCompra()
     {
         return $this->belongsTo(
@@ -126,14 +148,11 @@ class Producto extends Model
     ) {
         $query = self::queryActivos();
 
-        // ✅ Buscar GLOBAL por nombre (usuario final)
         if ($q !== null && trim($q) !== '') {
             $q = trim($q);
-            // Postgres: ILIKE
             $query->where('pro_nombre', 'ILIKE', '%' . $q . '%');
         }
 
-        // ✅ Filtrar por FK id_categoria
         if ($idCategoria !== null && $idCategoria !== '') {
             $query->where('id_categoria', (int)$idCategoria);
         }
@@ -148,19 +167,15 @@ class Producto extends Model
             case 'id_asc':
                 $query->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) ASC");
                 break;
-
             case 'id_desc':
                 $query->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) DESC");
                 break;
-
             case 'nombre_az':
                 $query->orderBy('pro_nombre', 'ASC');
                 break;
-
             case 'nombre_za':
                 $query->orderBy('pro_nombre', 'DESC');
                 break;
-
             default:
                 return null;
         }
@@ -173,7 +188,6 @@ class Producto extends Model
         return self::where('pro_nombre', $nombre)->exists();
     }
 
-    // (Compatibilidad si en algún lado aún llaman esto)
     public static function existeDescripcion(string $desc): bool
     {
         return self::where('pro_descripcion', $desc)->exists();
@@ -214,7 +228,7 @@ class Producto extends Model
 
             'pro_valor_compra'  => $data['pro_valor_compra'] ?? 0,
             'pro_precio_venta'  => $data['pro_precio_venta'],
-            'pro_precio_antes' => $data['pro_precio_antes'] ?? null,
+            'pro_precio_antes'  => $data['pro_precio_antes'] ?? null,
 
             'pro_saldo_inicial' => $data['pro_saldo_inicial'],
 
@@ -240,9 +254,8 @@ class Producto extends Model
         return $this->update([
             'pro_valor_compra'  => $data['pro_valor_compra'] ?? $this->pro_valor_compra,
             'pro_precio_venta'  => $data['pro_precio_venta'],
-            'pro_precio_antes' => $data['pro_precio_antes'] ?? $this->pro_precio_antes,
+            'pro_precio_antes'  => $data['pro_precio_antes'] ?? $this->pro_precio_antes,
 
-            // stock fijo (no editable en UI), se mantiene por compatibilidad
             'pro_saldo_inicial' => (int) $data['pro_saldo_inicial'],
             'pro_qty_ingresos'  => (int) $data['pro_qty_ingresos'],
             'pro_qty_egresos'   => (int) $data['pro_qty_egresos'],
