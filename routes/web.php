@@ -14,6 +14,7 @@ use App\Http\Controllers\ContactoController;
 */
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/home', function () { return redirect()->route('home'); });
+Route::get('/nosotros', [HomeController::class, 'nosotros'])->name('nosotros.index');
 
 /*
 |--------------------------------------------------------------------------
