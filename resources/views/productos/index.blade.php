@@ -29,12 +29,6 @@
             $desc = $productoVer->pro_descripcion ?? null;
         @endphp
 
-        <div class="text-muted small mb-3">
-            Inicio &nbsp;›&nbsp; Productos &nbsp;›&nbsp;
-            <span class="fw-bold">{{ $cat }}</span>
-            &nbsp;›&nbsp; {{ $productoVer->pro_nombre }}
-        </div>
-
         <div class="detail-card p-4">
             <div class="row g-4 align-items-start">
                 <div class="col-lg-6">
@@ -59,55 +53,55 @@
 
                     <div class="detail-title">{{ $productoVer->pro_nombre }}</div>
 
-                    <div class="price mb-3">
-                        @if($productoVer->tieneDescuento())
-                            <span class="precio-antes me-2">
-                                ${{ number_format((float) $productoVer->pro_precio_antes, 2) }}
-                            </span>
-                        @endif
-
-                        ${{ number_format((float) $productoVer->pro_precio_venta, 2) }}
-                    </div>
-
-                    <p class="text-muted mb-3">
-                        {{ !empty($desc) ? $desc : 'Sin descripción disponible.' }}
-                    </p>
-
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-6">
-                            <div class="pill w-100">
-                                <span class="text-muted">Unidad</span><br>
-                                {{ $productoVer->pro_um_compra }}
+                    @if($desc)
+                        <div class="mt-3">
+                            <div class="text-muted small fw-bold mb-1">Descripción</div>
+                            <div class="text-muted" style="line-height:1.65;">
+                                {{ $desc }}
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="pill w-100">
-                                <span class="text-muted">Categoría</span><br>
-                                {{ $cat }}
+                    @endif
+
+                    <hr class="my-4">
+
+                    <div class="d-flex align-items-end justify-content-between flex-wrap gap-3">
+                        <div>
+                            @if($productoVer->tieneDescuento())
+                                <div class="precio-antes">
+                                    ${{ number_format((float) $productoVer->pro_precio_antes, 2) }}
+                                </div>
+                            @endif
+
+                            <div class="display-6 fw-bold mb-0">
+                                ${{ number_format((float) $productoVer->pro_precio_venta, 2) }}
                             </div>
                         </div>
-                    </div>
 
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="text-muted small fw-bold">Cantidad</div>
                         <div class="d-flex align-items-center gap-2">
-                            <button class="btn btn-light border rounded-circle" type="button" id="btnMinus">-</button>
-                            <div class="fw-bold" style="min-width:24px; text-align:center;" id="qty">1</div>
-                            <button class="btn btn-light border rounded-circle" type="button" id="btnPlus">+</button>
+                            <button class="btn btn-outline-secondary" id="btnMinus">-</button>
+                            <input id="txtQty" type="text" class="form-control text-center" value="1" style="width:60px;">
+                            <button class="btn btn-outline-secondary" id="btnPlus">+</button>
+                        </div>
+                    </div>
+                    <div class="row g-2 mt-3">
+                        <div class="col-12">
+                            <div class="pill">
+                                <div class="text-muted small fw-bold">Unidad</div>
+                                <div class="fw-bold">
+                                    {{ $productoVer->unidadVenta?->um_descripcion ?? $productoVer->unidadCompra?->um_descripcion ?? 'N/D' }}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <button id="btnAddToCart"
-                            type="button"
-                            class="btn btn-concho product-btn py-3"
-                            data-id="{{ $productoVer->id_producto }}"
-                            data-nombre="{{ $productoVer->pro_nombre }}"
-                            data-precio="{{ $productoVer->pro_precio_venta }}">
-                        <i class="fa-solid fa-cart-shopping me-2"></i> Agregar al Carrito
-                    </button>
-
-                    <div class="text-muted small mt-2">
-                        (Demo visual. Tu módulo actual es inventario/admin.)
+                    <div class="mt-4 d-grid gap-2">
+                        <button class="btn btn-concho btn-lg"
+                                id="btnAddCarrito"
+                                data-id="{{ $productoVer->id_producto }}"
+                                data-nombre="{{ $productoVer->pro_nombre }}"
+                                data-precio="{{ $productoVer->pro_precio_venta }}">
+                            <i class="fa-solid fa-cart-plus me-2"></i> Agregar al carrito
+                        </button>
                     </div>
                 </div>
             </div>
@@ -115,28 +109,28 @@
 
         <script>
             (function(){
-                const qtyEl = document.getElementById('qty');
-                const btnMinus = document.getElementById('btnMinus');
-                const btnPlus = document.getElementById('btnPlus');
-                let cantidadActual = 1;
-
-                if(qtyEl && btnMinus && btnPlus) {
-                    btnMinus.addEventListener('click', () => {
-                        cantidadActual = Math.max(1, cantidadActual - 1);
-                        qtyEl.textContent = cantidadActual;
-                    });
-                    btnPlus.addEventListener('click', () => {
-                        cantidadActual = cantidadActual + 1;
-                        qtyEl.textContent = cantidadActual;
-                    });
+                // --- QTY simple (no cambia lógica del sistema) ---
+                const minus = document.getElementById('btnMinus');
+                const plus  = document.getElementById('btnPlus');
+                const qty   = document.getElementById('txtQty');
+                function clamp(){
+                    let n = parseInt(qty.value || '1', 10);
+                    if(isNaN(n) || n < 1) n = 1;
+                    qty.value = n;
+                    return n;
                 }
+                if(minus) minus.addEventListener('click', () => { clamp(); qty.value = Math.max(1, parseInt(qty.value,10)-1); });
+                if(plus)  plus.addEventListener('click',  () => { clamp(); qty.value = parseInt(qty.value,10)+1; });
+                if(qty)   qty.addEventListener('input', clamp);
 
-                const btnAdd = document.getElementById('btnAddToCart');
-
-                if(btnAdd) {
+                // --- ADD carrito (tu lógica existente) ---
+                const btnAdd = document.getElementById('btnAddCarrito');
+                if(btnAdd){
                     btnAdd.addEventListener('click', () => {
                         const token = localStorage.getItem('auth_token');
-                        if (!token) {
+                        const cantidadActual = clamp();
+
+                        if(!token){
                             window.location.href = "/login";
                             return;
                         }
@@ -200,156 +194,142 @@
             {{-- GRID --}}
             <div class="col-12 col-lg-9">
 
-                {{-- ✅ SECCIÓN OFERTAS (PROMOS) --}}
-                @php
-                    $catFiltro = request('categoria', request('id_categoria'));
-                    $qFiltro   = request('q');
-                    $umFiltro  = request('unidad_medida');
-                    $ordFiltro = request('orden');
+                {{-- Contenedor para reemplazo AJAX (ofertas + grid + paginación) --}}
+                <div id="productosContenido">
 
-                    // Categoría "Todas" la consideramos NO filtro
-                    $catVal = strtolower(trim((string)($catFiltro ?? '')));
-                    $catActivo = ($catVal !== '' && !in_array($catVal, ['0','all','todas','toda','*'], true));
+                    {{-- ✅ SECCIÓN OFERTAS (PROMOS) --}}
+                    @php
+                        $catFiltro = request('categoria', request('id_categoria'));
+                        $qFiltro   = request('q');
+                        $umFiltro  = request('unidad_medida');
+                        $ordFiltro = request('orden');
 
-                    // Orden "por defecto" NO debe contar como filtro (normalmente id_asc)
-                    $ordVal = strtolower(trim((string)($ordFiltro ?? '')));
-                    $ordenActivo = ($ordVal !== '' && !in_array($ordVal, ['id_asc','default'], true));
+                        // Categoría "Todas" la consideramos NO filtro
+                        $catVal = strtolower(trim((string)($catFiltro ?? '')));
+                        $catActivo = ($catVal !== '' && !in_array($catVal, ['0','all','todas','toda','*'], true));
 
-                    // Unidad vacía o "todas" NO cuenta como filtro
-                    $umVal = strtolower(trim((string)($umFiltro ?? '')));
-                    $unidadActiva = ($umVal !== '' && !in_array($umVal, ['all','todas','toda','*'], true));
+                        // Orden "por defecto" NO debe contar como filtro (normalmente id_asc)
+                        $ordVal = strtolower(trim((string)($ordFiltro ?? '')));
+                        $ordenActivo = ($ordVal !== '' && !in_array($ordVal, ['id_asc','default'], true));
 
-                    $hayFiltros = $catActivo
-                        || ($qFiltro !== null && trim((string)$qFiltro) !== '')
-                        || $unidadActiva
-                        || $ordenActivo;
-                @endphp
+                        // Unidad vacía o "todas" NO cuenta como filtro
+                        $umVal = strtolower(trim((string)($umFiltro ?? '')));
+                        $unidadActiva = ($umVal !== '' && !in_array($umVal, ['all','todas','toda','*'], true));
 
-            @if(!$hayFiltros && isset($ofertas) && $ofertas->count() > 0)
-                    <div class="mb-4" id="ofertasSection">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                            <h5 class="fw-bold mb-0">Ofertas del día</h5>
-                            <span class="text-muted small fw-bold">Aprovecha antes que se acaben</span>
-                        </div>
+                        $hayFiltros = $catActivo || $ordenActivo || $unidadActiva || ($qFiltro !== null && trim($qFiltro) !== '');
+                    @endphp
 
-                        <div class="row g-3">
-                            @foreach($ofertas as $o)
-                                @php $catO = $o->categoria?->cat_nombre ?? 'Sin categoría'; @endphp
+                    @if(!$hayFiltros && isset($ofertas) && $ofertas && $ofertas->count() > 0)
+                        <div id="ofertasSection" class="mb-4">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h5 class="mb-0 fw-bold">Ofertas destacadas</h5>
+                            </div>
 
-                                <div class="col-12 col-md-6 col-xl-4">
-                                    <div class="product-card h-100">
-                                        @if($o->tieneDescuento())
-                                            <div class="badge-oferta">{{ $o->etiquetaPromo() }}</div>
-                                        @endif
-
-                                        <div class="imgwrap">
-                                            @if(!empty($o->pro_imagen))
-                                                <img src="{{ asset('storage/' . $o->pro_imagen) }}"
-                                                     alt="Imagen {{ $o->pro_nombre }}">
-                                            @else
-                                                <div class="h-100 d-flex align-items-center justify-content-center text-muted small">
-                                                    Sin imagen
-                                                </div>
-                                            @endif
-                                        </div>
-
-                                        <div class="p-3">
-                                            <span class="badge-cat">{{ $catO }}</span>
-                                            <div class="product-title">{{ $o->pro_nombre }}</div>
-
-                                            <div class="price mb-3">
-                                <span class="precio-antes me-2">
-                                    ${{ number_format((float) $o->pro_precio_antes, 2) }}
-                                </span>
-                                                ${{ number_format((float) $o->pro_precio_venta, 2) }}
+                            <div class="row g-3">
+                                @foreach($ofertas as $o)
+                                    @php
+                                        $img = !empty($o->pro_imagen) ? asset('storage/' . $o->pro_imagen) : 'https://placehold.co/600x450';
+                                        $catO = $o->categoria?->cat_nombre ?? 'Sin categoría';
+                                    @endphp
+                                    <div class="col-12 col-md-6 col-lg-4">
+                                        <div class="product-card h-100 position-relative">
+                                            <div class="imgwrap">
+                                                <img src="{{ $img }}" alt="Imagen {{ $o->pro_nombre }}">
                                             </div>
 
-                                            <a class="btn btn-concho product-btn"
-                                               href="{{ route('productos.index', ['view' => $o->id_producto]) }}">
-                                                Ver detalles
-                                            </a>
+                                            <span class="badge-oferta">{{ $o->etiquetaPromo() }}</span>
+
+                                            <div class="p-3">
+                                                <span class="badge-cat">{{ $catO }}</span>
+
+                                                <div class="product-title">{{ $o->pro_nombre }}</div>
+
+                                                <div class="price mb-3">
+                                                    <span class="precio-antes me-2">
+                                                        ${{ number_format((float) $o->pro_precio_antes, 2) }}
+                                                    </span>
+                                                    ${{ number_format((float) $o->pro_precio_venta, 2) }}
+                                                </div>
+
+                                                <a class="btn btn-concho product-btn"
+                                                   href="{{ route('productos.index', ['view' => $o->id_producto]) }}">
+                                                    Ver detalles
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                    <div class="text-muted small fw-bold">
-                        {{ $productos->total() }} productos encontrados
-                    </div>
-
-                    <div class="d-none">
-                        <a class="btn btn-primary"
-                           href="{{ route('productos.index', ['create' => 1]) }}">
-                            + Crear nuevo producto
-                        </a>
-                    </div>
-                </div>
-
-                <div class="row g-4" id="gridProductos">
-                    @foreach($productos as $p)
-                        @php
-                            $cat = $p->categoria?->cat_nombre ?? 'Sin categoría';
-                        @endphp
-
-                        <div class="col-12 col-md-6 col-xl-4 producto-item"
-                             data-precio="{{ floatval($p->pro_precio_venta) }}">
-                            <div class="product-card h-100">
-
-                                {{-- ✅ BADGE PROMO EN TARJETA (si aplica) --}}
-                                @if($p->tieneDescuento())
-                                    <div class="badge-oferta">{{ $p->etiquetaPromo() }}</div>
-                                @endif
-
-                                <div class="imgwrap">
-                                    @if(!empty($p->pro_imagen))
-                                        <img src="{{ asset('storage/' . $p->pro_imagen) }}"
-                                             alt="Imagen {{ $p->pro_nombre }}">
-                                    @else
-                                        <div class="h-100 d-flex align-items-center justify-content-center text-muted small">
-                                            Sin imagen
-                                        </div>
-                                    @endif
-                                </div>
-
-                                <div class="p-3">
-                                    <span class="badge-cat">{{ $cat }}</span>
-
-                                    <div class="product-title">{{ $p->pro_nombre }}</div>
-
-                                    <div class="price mb-3">
-                                        @if($p->tieneDescuento())
-                                            <span class="precio-antes me-2">
-                                                ${{ number_format((float) $p->pro_precio_antes, 2) }}
-                                            </span>
-                                        @endif
-                                        ${{ number_format((float) $p->pro_precio_venta, 2) }}
-                                    </div>
-
-                                    <a class="btn btn-concho product-btn"
-                                       href="{{ route('productos.index', ['view' => $p->id_producto]) }}">
-                                        Ver detalles
-                                    </a>
-                                </div>
+                                @endforeach
                             </div>
-                        </div>
-                    @endforeach
 
-                    @if($productos->count() === 0)
-                        <div class="col-12">
-                            <div class="alert alert-warning alert-soft mb-0">
-                                {{ $info ?? 'Sin registros' }}
-                            </div>
+                            <hr class="my-4">
                         </div>
                     @endif
-                </div>
 
-                <div class="d-flex justify-content-center mt-4">
-                    {{ $productos->links('pagination::bootstrap-4') }}
-                </div>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="mb-0 fw-bold">
+                            @if($hayFiltros) Resultados @else Productos @endif
+                        </h5>
+                        <div class="text-muted small fw-bold" id="lblTotalProductos">
+                            {{ $productos->total() }} producto(s)
+                        </div>
+                    </div>
+
+                    <div class="row g-3" id="gridProductos">
+                        @foreach($productos as $p)
+                            @php
+                                $img = !empty($p->pro_imagen) ? asset('storage/' . $p->pro_imagen) : 'https://placehold.co/600x450';
+                                $cat = $p->categoria?->cat_nombre ?? 'Sin categoría';
+                            @endphp
+
+                            <div class="col-12 col-md-6 col-lg-4 producto-item"
+                                 data-precio="{{ (float)$p->pro_precio_venta }}">
+                                <div class="product-card h-100 position-relative">
+                                    <div class="imgwrap">
+                                        <img src="{{ $img }}" alt="Imagen {{ $p->pro_nombre }}">
+                                    </div>
+
+                                    {{-- ✅ ETIQUETA DE OFERTA (si aplica) --}}
+                                    @if($p->tieneDescuento())
+                                        <span class="badge-oferta">{{ $p->etiquetaPromo() }}</span>
+                                    @endif
+
+                                    <div class="p-3">
+                                        <span class="badge-cat">{{ $cat }}</span>
+
+                                        <div class="product-title">{{ $p->pro_nombre }}</div>
+
+                                        <div class="price mb-3">
+                                            @if($p->tieneDescuento())
+                                                <span class="precio-antes me-2">
+                                                    ${{ number_format((float) $p->pro_precio_antes, 2) }}
+                                                </span>
+                                            @endif
+                                            ${{ number_format((float) $p->pro_precio_venta, 2) }}
+                                        </div>
+
+                                        <a class="btn btn-concho product-btn"
+                                           href="{{ route('productos.index', ['view' => $p->id_producto]) }}">
+                                            Ver detalles
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+
+                        @if($productos->count() === 0)
+                            <div class="col-12">
+                                <div class="alert alert-warning alert-soft mb-0">
+                                    {{ $info ?? 'Sin registros' }}
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="d-flex justify-content-center mt-4" id="paginacionProductos">
+                        {{ $productos->links('pagination::bootstrap-4') }}
+                    </div>
+
+                </div>{{-- /productosContenido --}}
 
             </div>
         </div>
@@ -358,8 +338,6 @@
             (function(){
                 const range = document.getElementById('rangePrecio');
                 const lbl = document.getElementById('lblPrecio');
-                const items = Array.from(document.querySelectorAll('.producto-item'));
-                const ofertasSection = document.getElementById('ofertasSection');
 
                 const maxDefault = range
                     ? parseFloat(range.max || range.getAttribute('max') || range.value || '0')
@@ -368,7 +346,8 @@
                 function aplicar(){
                     const max = range ? parseFloat(range.value || '999999') : Infinity;
 
-                    // Filtra productos por precio
+                    // Recalcular SIEMPRE (porque el grid puede cambiar por AJAX)
+                    const items = Array.from(document.querySelectorAll('.producto-item'));
                     items.forEach(el => {
                         const precio = parseFloat(el.getAttribute('data-precio') || '0');
                         el.style.display = (precio <= max) ? '' : 'none';
@@ -379,14 +358,17 @@
                         lbl.textContent = 'Hasta $' + parseFloat(range.value || '0').toFixed(2);
                     }
 
-                    // ✅ Ocultar ofertas si el usuario movió el precio
-                    // y restaurar cuando vuelve al máximo ("Todas")
+                    // Ocultar ofertas si el usuario movió el precio y restaurar al máximo
+                    const ofertasSection = document.getElementById('ofertasSection');
                     if(ofertasSection && range && maxDefault !== null){
                         const sliderActual = parseFloat(range.value || '0');
-                        const mostrarOfertas = (sliderActual >= maxDefault); // solo al máximo
+                        const mostrarOfertas = (sliderActual >= maxDefault);
                         ofertasSection.style.display = mostrarOfertas ? '' : 'none';
                     }
                 }
+
+                // Exponer para el AJAX del buscador
+                window.applyPriceFilter = aplicar;
 
                 if(range) range.addEventListener('input', aplicar);
                 aplicar();

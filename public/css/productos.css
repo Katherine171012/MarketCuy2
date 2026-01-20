@@ -218,15 +218,59 @@ body { background-color: #f7f7fb; }
 }
 
 /* ========= DETALLE (NO CORTAR IMAGEN) ========= */
-.detail-img{
-    width:100%;
-    max-height: 420px;
-    height:auto;
-    object-fit: contain;
-    background:#f1f1f1;
-    display:block;
+.detail-card{
+    background:#fff;
+    border-radius: 22px;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
 }
 
+.detail-title{
+    font-size: 1.65rem;
+    font-weight: 800;
+    margin: 10px 0 6px;
+    line-height: 1.15;
+}
+
+.detail-img{
+    width:100%;
+    height: 420px;
+    object-fit: contain;
+    background:#fff;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+.pill{
+    background:#fbfbfe;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 16px;
+    padding: 12px 14px;
+}
+
+#btnMinus, #btnPlus{
+    width: 38px;
+    height: 38px;
+    padding: 0;
+}
+
+@media (max-width: 991px){
+    .detail-img{ height: 340px; }
+}
+
+/* Toques suaves para que se vea más limpio (detalle) */
+.detail-card hr{
+    opacity: .12;
+}
+
+.badge-cat{
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-weight: 700;
+}
+
+#btnAddCarrito{
+    border-radius: 16px;
+}
 /* ========= FOOTER GLOBAL (FIX: que SI se vea en Contacto/Productos) ========= */
 .footer-main{
     background:#171717;

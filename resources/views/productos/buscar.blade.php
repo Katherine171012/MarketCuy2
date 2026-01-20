@@ -17,9 +17,17 @@
                        name="q"
                        type="text"
                        class="form-control shop-search-input"
-                       placeholder="Buscar productos..."
-                       value="{{ request('q') }}">
+                       placeholder="Buscar productos."
+                       value="{{ request('q') }}"
+                       autocomplete="off">
             </div>
+
+            {{-- LIMPIAR (restablece TODO al estado normal) --}}
+            <a href="{{ route('productos.index') }}"
+               id="btnLimpiarFiltros"
+               class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                Limpiar
+            </a>
         </form>
     </div>
 
@@ -71,16 +79,84 @@
 </div>
 
 <script>
-    (function(){
-        // Buscar GLOBAL (server-side) con debounce sin cambiar el estilo
+    (function () {
+        // Búsqueda en tiempo real SIN perder foco:
+        // en vez de form.submit() (que recarga y quita foco), hacemos fetch y reemplazamos el contenido. :contentReference[oaicite:2]{index=2}
         const form = document.getElementById('frmBuscarGlobal');
         const txt  = document.getElementById('txtBuscarLocal');
-        if(!form || !txt) return;
+        if (!form || !txt) return;
 
         let t = null;
+
+        function buildUrl() {
+            const url = new URL(form.action, window.location.origin);
+            const data = new FormData(form);
+
+            for (const [k, v] of data.entries()) {
+                const val = (v ?? '').toString().trim();
+                if (val !== '') url.searchParams.set(k, val);
+            }
+            // siempre volver a página 1 cuando cambias el texto
+            url.searchParams.delete('page');
+            return url.toString();
+        }
+
+        async function runSearch() {
+            const caretStart = txt.selectionStart;
+            const caretEnd = txt.selectionEnd;
+
+            const url = buildUrl();
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+
+                const nuevo = doc.getElementById('productosContenido');
+                const actual = document.getElementById('productosContenido');
+
+                // fallback seguro: si no encuentra el contenedor, navegamos normal
+                if (!nuevo || !actual) {
+                    window.location.href = url;
+                    return;
+                }
+
+                actual.innerHTML = nuevo.innerHTML;
+
+                // actualizar URL sin recargar (para que quede “shareable”)
+                if (history && history.replaceState) {
+                    history.replaceState(null, '', url);
+                }
+
+                // re-aplicar filtro precio (porque el grid cambió)
+                if (typeof window.applyPriceFilter === 'function') {
+                    window.applyPriceFilter();
+                }
+
+            } catch (e) {
+                window.location.href = url;
+                return;
+            } finally {
+                // mantener foco y cursor
+                txt.focus({ preventScroll: true });
+                try { txt.setSelectionRange(caretStart, caretEnd); } catch (_) {}
+            }
+        }
+
         txt.addEventListener('input', () => {
             clearTimeout(t);
-            t = setTimeout(() => form.submit(), 450);
+            t = setTimeout(runSearch, 300);
+        });
+
+        txt.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(t);
+                runSearch();
+            }
         });
     })();
 </script>

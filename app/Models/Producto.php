@@ -136,7 +136,8 @@ class Producto extends Model
     public static function buscarPorId(?string $id): ?self
     {
         if (!$id) return null;
-        return self::with('categoria')->find($id);
+
+        return self::with(['categoria', 'unidadCompra', 'unidadVenta'])->find($id);
     }
 
     public static function paginarActivosConFiltros(
