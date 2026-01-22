@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class UnidadMedida extends Model
 {
+    protected $connection = 'pgsql_cloud';
+
     protected $table = 'unidades_medidas';
     protected $primaryKey = 'id_unidad_medida';
     public $incrementing = false;

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Categoria extends Model
 {
+    protected $connection = 'pgsql_cloud';
+
     protected $table = 'categorias';
     protected $primaryKey = 'id_categoria';
     public $incrementing = true;

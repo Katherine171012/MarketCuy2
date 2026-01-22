@@ -80,7 +80,7 @@
                 <div id="menuAuth" class="d-none align-items-center gap-3">
 
                     {{-- Botón Carrito con Contador Real --}}
-                    <a href="{{ url('/cart/view') }}" class="btn btn-light border position-relative text-dark">
+                    <a href="{{ route('cart.index') }}" class="btn btn-light border position-relative text-dark">
                         <i class="fa-solid fa-cart-shopping"></i>
                         <span id="cartCounter" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                             0
@@ -212,7 +212,7 @@
                 .catch(err => { if(err.status === 401) logout(); });
 
             // Pedir datos del carrito
-            fetch('/api/cart/data', {
+            fetch('/api/carrito', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => res.json())

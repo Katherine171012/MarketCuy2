@@ -57,16 +57,10 @@ Route::post('/contacto', [ContactoController::class, 'store'])->name('contacto.s
 |--------------------------------------------------------------------------
 */
 
-// Vista del Carrito -> Apunta a views/shop/carrito.blade.php
-Route::get('/cart/view', function () {
-    return view('shop.carrito');
-})->name('cart.view');
-
-// Redirección amigable
+// Vista del Carrito (La que tiene el diseño que me mostraste)
 Route::get('/carrito', function () {
-    return redirect()->route('cart.view');
+    return view('shop.carrito');
 })->name('cart.index');
-
 // Vista Checkout -> Apunta a views/shop/checkout.blade.php
 Route::get('/finalizar-compra', function () {
     return view('shop.checkout');

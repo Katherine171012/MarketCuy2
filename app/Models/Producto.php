@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 
 class Producto extends Model
 {
+    protected $connection = 'pgsql_cloud';
+
     protected $table = 'productos';
     protected $primaryKey = 'id_producto';
     public $incrementing = false;

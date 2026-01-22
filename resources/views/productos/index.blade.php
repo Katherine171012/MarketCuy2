@@ -135,49 +135,43 @@
                             return;
                         }
 
-                        const counterEl = document.getElementById('cartCounter');
-                        if(counterEl) {
-                            let current = parseInt(counterEl.innerText || 0);
-                            let nuevoTotal = current + cantidadActual;
-                            counterEl.innerText = nuevoTotal;
-                            localStorage.setItem('cart_count_cache', nuevoTotal);
-                        }
-
+                        // UI: Cambiar botón a "Agregado"
                         const btnTextOriginal = btnAdd.innerHTML;
                         btnAdd.innerHTML = '<i class="fa-solid fa-check"></i> ¡Agregado!';
-                        btnAdd.classList.remove('btn-concho');
-                        btnAdd.classList.add('btn-success');
+                        btnAdd.classList.replace('btn-concho', 'btn-success');
 
                         setTimeout(() => {
                             btnAdd.innerHTML = btnTextOriginal;
-                            btnAdd.classList.remove('btn-success');
-                            btnAdd.classList.add('btn-concho');
+                            btnAdd.classList.replace('btn-success', 'btn-concho');
                         }, 2000);
 
-                        fetch('/api/cart-add', {
+                        // LLAMADA A LA API DE POSTGRESQL
+                        fetch('/api/carrito/agregar', { // <--- URL CORREGIDA
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'Accept': 'application/json',
                                 'Authorization': `Bearer ${token}`
                             },
                             body: JSON.stringify({
                                 id_producto: btnAdd.getAttribute('data-id').trim(),
-                                nombre: btnAdd.getAttribute('data-nombre'),
-                                precio: btnAdd.getAttribute('data-precio'),
-                                cantidad: cantidadActual,
-                                imagen: "{{ !empty($productoVer->pro_imagen) ? asset('storage/' . $productoVer->pro_imagen) : 'https://placehold.co/100' }}"
+                                cantidad: cantidadActual
+                                // Ya no enviamos nombre, precio ni imagen, el MODELO los obtiene por el ID
                             })
                         })
-                            .then(response => {
-                                if (!response.ok) {
-                                    alert("Hubo un error guardando en el carrito. Por favor intenta de nuevo.");
-                                    if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual;
+                            .then(async response => {
+                                const data = await response.json();
+                                if (response.ok) {
+                                    // Actualizar el contador del nav con el nuevo total que viene del servidor
+                                    // O simplemente recargar el contador llamando a la función del nav
+                                    fetchCart(); // Si tienes la función global
+                                } else {
+                                    alert(data.error || "Error al agregar");
                                 }
                             })
-                            .catch(() => {
-                                if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual;
-                            });
+                            .catch(err => console.error("Error:", err));
                     });
+
                 }
             })();
         </script>
