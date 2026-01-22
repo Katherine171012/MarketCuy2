@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Carrito extends Model
 {
-    protected $connection = 'pgsql_cloud';
+    protected $connection = 'pgsql';
     protected $table = 'carrito';
     protected $fillable = ['id_user', 'id_producto', 'cantidad'];
 

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Categoria extends Model
 {
-    protected $connection = 'pgsql_cloud';
+    protected $connection = 'pgsql';
 
     protected $table = 'categorias';
     protected $primaryKey = 'id_categoria';
