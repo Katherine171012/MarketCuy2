@@ -1129,6 +1129,41 @@ body.scrolled .hero-contacto {
         min-height: 350px;
     }
 }
+.nosotros-hero{
+    /* Baja el contenido y evita que quede pegado al borde */
+    align-items: flex-end;
+    padding-bottom: 80px;
+
+    /* Overlay más suave para no apagar la foto */
+    background:
+        linear-gradient(rgba(0,0,0,.12), rgba(0,0,0,.12)),
+        url("../images/hero-nosotros.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Control del bloque de texto (derecha y no tan ancho) */
+.nosotros-hero .nosotros-hero-content{
+    max-width: 720px;
+    margin-left: auto;   /* empuja el bloque hacia la derecha */
+}
+
+/* ========= CONTRASTE DEL TÍTULO (sin tapar la foto) ========= */
+.nosotros-hero .display-4{
+    color: #fff !important;
+    font-weight: 900 !important;
+
+
+    text-shadow:
+        0 2px 8px rgba(0,0,0,.70),
+        0 14px 34px rgba(0,0,0,.45);
+}
+
+@supports (-webkit-text-stroke: 1px black) {
+    .nosotros-hero .display-4{
+        -webkit-text-stroke: 1px rgba(0,0,0,.35);
+    }
 /* ====== PROMOS / OFERTAS (FIX visual) ====== */
 .product-card{
     position: relative;
