@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class DetalleFactura extends Model
 {
+    protected $connection = 'pgsql';
     protected $table = 'proxfac'; // Tu tabla SQL
     public $timestamps = false;
 

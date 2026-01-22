@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class Factura extends Model
 {
+    protected $connection = 'pgsql';
     protected $table = 'facturas';
     protected $primaryKey = 'id_factura';
     public $incrementing = false;
