@@ -1,4 +1,4 @@
-FROM richarvey/nginx-php-fpm:latest
+FROM richarvey/nginx-php-fpm:8.4
 
 # Webroot para Laravel
 ENV WEBROOT /var/www/html/public
