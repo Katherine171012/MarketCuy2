@@ -1,19 +1,23 @@
 FROM richarvey/nginx-php-fpm:latest
 
-# Copiar el proyecto
-COPY . /var/www/html
-
-# Configuración de Laravel
+# Webroot para Laravel
 ENV WEBROOT /var/www/html/public
 ENV PHP_ERRORS_STDERR 1
 ENV RUN_SCRIPTS 1
 ENV REAL_IP_HEADER 1
 
-# Instalar dependencias de PHP y JS
-RUN composer install --no-dev --optimize-autoloader
-RUN npm install && npm run build
+# Copiar proyecto
+COPY . /var/www/html
 
-# Permisos para Laravel
-RUN chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
+WORKDIR /var/www/html
+
+# Crear .env para el build
+RUN cp .env.example .env
+
+# Instalar dependencias PHP (SIN scripts)
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
+# Permisos Laravel
+RUN chmod -R 777 storage bootstrap/cache
 
 EXPOSE 80
