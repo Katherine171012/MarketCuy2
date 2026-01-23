@@ -27,20 +27,19 @@
         @php
             $cat = $productoVer->categoria?->cat_nombre ?? 'Sin categoría';
             $desc = $productoVer->pro_descripcion ?? null;
+
+            // ✅ IMAGEN DESDE public/images
+            $imgDetalle = !empty($productoVer->pro_imagen)
+                ? asset('images/' . ltrim($productoVer->pro_imagen, '/'))
+                : asset('images/logo.png');
         @endphp
 
         <div class="detail-card p-4">
             <div class="row g-4 align-items-start">
                 <div class="col-lg-6">
-                    @if(!empty($productoVer->pro_imagen))
-                        <img class="detail-img rounded-4"
-                             src="{{ asset('storage/' . $productoVer->pro_imagen) }}"
-                             alt="Imagen {{ $productoVer->pro_nombre }}">
-                    @else
-                        <div class="detail-img rounded-4 d-flex align-items-center justify-content-center text-muted">
-                            Sin imagen
-                        </div>
-                    @endif
+                    <img class="detail-img rounded-4"
+                         src="{{ $imgDetalle }}"
+                         alt="Imagen {{ $productoVer->pro_nombre }}">
                 </div>
 
                 <div class="col-lg-6">
@@ -83,6 +82,7 @@
                             <button class="btn btn-outline-secondary" id="btnPlus">+</button>
                         </div>
                     </div>
+
                     <div class="row g-2 mt-3">
                         <div class="col-12">
                             <div class="pill">
@@ -156,15 +156,12 @@
                             body: JSON.stringify({
                                 id_producto: btnAdd.getAttribute('data-id').trim(),
                                 cantidad: cantidadActual
-                                // Ya no enviamos nombre, precio ni imagen, el MODELO los obtiene por el ID
                             })
                         })
                             .then(async response => {
                                 const data = await response.json();
                                 if (response.ok) {
-                                    // Actualizar el contador del nav con el nuevo total que viene del servidor
-                                    // O simplemente recargar el contador llamando a la función del nav
-                                    fetchCart(); // Si tienes la función global
+                                    fetchCart(); // si existe global
                                 } else {
                                     alert(data.error || "Error al agregar");
                                 }
@@ -222,13 +219,17 @@
                             <div class="row g-3">
                                 @foreach($ofertas as $o)
                                     @php
-                                        $img = !empty($o->pro_imagen) ? asset('storage/' . $o->pro_imagen) : 'https://placehold.co/600x450';
+                                        // ✅ IMAGEN DESDE public/images
+                                        $imgO = !empty($o->pro_imagen)
+                                            ? asset('images/' . ltrim($o->pro_imagen, '/'))
+                                            : asset('images/logo.png');
+
                                         $catO = $o->categoria?->cat_nombre ?? 'Sin categoría';
                                     @endphp
                                     <div class="col-12 col-md-6 col-lg-4">
                                         <div class="product-card h-100 position-relative">
                                             <div class="imgwrap">
-                                                <img src="{{ $img }}" alt="Imagen {{ $o->pro_nombre }}">
+                                                <img src="{{ $imgO }}" alt="Imagen {{ $o->pro_nombre }}">
                                             </div>
 
                                             <span class="badge-oferta">{{ $o->etiquetaPromo() }}</span>
@@ -271,15 +272,20 @@
                     <div class="row g-3" id="gridProductos">
                         @foreach($productos as $p)
                             @php
-                                $img = !empty($p->pro_imagen) ? asset('storage/' . $p->pro_imagen) : 'https://placehold.co/600x450';
-                                $cat = $p->categoria?->cat_nombre ?? 'Sin categoría';
+                                // ✅ IMAGEN DESDE public/images
+                                $imgP = !empty($p->pro_imagen)
+                                    ? asset('images/' . ltrim($p->pro_imagen, '/'))
+                                    : asset('images/logo.png');
+
+                                // ✅ FIX del error: definir categoría por producto
+                                $catP = $p->categoria?->cat_nombre ?? 'Sin categoría';
                             @endphp
 
                             <div class="col-12 col-md-6 col-lg-4 producto-item"
                                  data-precio="{{ (float)$p->pro_precio_venta }}">
                                 <div class="product-card h-100 position-relative">
                                     <div class="imgwrap">
-                                        <img src="{{ $img }}" alt="Imagen {{ $p->pro_nombre }}">
+                                        <img src="{{ $imgP }}" alt="Imagen {{ $p->pro_nombre }}">
                                     </div>
 
                                     {{-- ✅ ETIQUETA DE OFERTA (si aplica) --}}
@@ -288,7 +294,7 @@
                                     @endif
 
                                     <div class="p-3">
-                                        <span class="badge-cat">{{ $cat }}</span>
+                                        <span class="badge-cat">{{ $catP }}</span>
 
                                         <div class="product-title">{{ $p->pro_nombre }}</div>
 
