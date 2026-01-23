@@ -22,4 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/carrito/agregar', [CarritoController::class, 'agregar']); // Agregar/Incrementar
     Route::delete('/carrito/eliminar/{id}', [CarritoController::class, 'eliminar']); // Borrar uno
     Route::delete('/carrito/vaciar', [CarritoController::class, 'vaciar']); // Borrar todo
+
+    // --- RUTA DE CHECKOUT ---
+    Route::post('/checkout-process', [\App\Http\Controllers\CheckoutController::class, 'process']);
 });

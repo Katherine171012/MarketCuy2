@@ -32,12 +32,14 @@
 
                         <div class="mb-3">
                             <label class="form-label">Dirección Exacta</label>
-                            <input type="text" name="direccion" class="form-control" placeholder="Calle principal, número, referencia..." required>
+                            <input type="text" name="direccion" class="form-control"
+                                placeholder="Calle principal, número, referencia..." required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Notas Adicionales (Opcional)</label>
-                            <textarea name="notas" class="form-control" rows="2" placeholder="Ej: Dejar en portería"></textarea>
+                            <textarea name="notas" class="form-control" rows="2"
+                                placeholder="Ej: Dejar en portería"></textarea>
                         </div>
                     </div>
 
@@ -67,7 +69,9 @@
 
                         {{-- Lista dinámica de items --}}
                         <div id="checkout-items" class="mb-3" style="max-height: 300px; overflow-y: auto;">
-                            <div class="text-center py-3"><div class="spinner-border text-danger"></div></div>
+                            <div class="text-center py-3">
+                                <div class="spinner-border text-danger"></div>
+                            </div>
                         </div>
 
                         <hr>
@@ -89,7 +93,7 @@
                         <button type="submit" id="btn-pay" class="btn btn-success w-100 py-3 mt-3 fw-bold shadow">
                             Confirmar y Pagar
                         </button>
-                        <a href="{{ route('cart.view') }}" class="btn btn-link w-100 text-muted mt-1 text-decoration-none">
+                        <a href="{{ route('cart.index') }}" class="btn btn-link w-100 text-muted mt-1 text-decoration-none">
                             Volver al carrito
                         </a>
                     </div>
@@ -102,57 +106,77 @@
     <script>
         const getToken = () => localStorage.getItem('auth_token');
 
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             loadSummary();
         });
 
         // 1. CARGAR RESUMEN DEL CARRITO
         async function loadSummary() {
             const token = getToken();
-            if(!token) { window.location.href = '/login'; return; }
+            if (!token) { window.location.href = '/login'; return; }
 
             // LEER CACHE PRIMERO
-            const cachedItems = localStorage.getItem('cart_items_cache');
-            if(cachedItems) {
-                const items = JSON.parse(cachedItems);
-                renderSummaryHTML(items); // Pintamos inmediato
+            const cachedData = localStorage.getItem('cart_items_cache');
+            if (cachedData) {
+                const data = JSON.parse(cachedData);
+                renderSummaryHTML(data.items, data.subtotal); // Pintamos inmediato
             }
 
             try {
-                const res = await fetch('/api/cart/data', {
+                const res = await fetch('/api/carrito', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
-                const items = data.items || {};
 
-                // Guardar cache y volver a pintar por si hubo cambios de precio
-                localStorage.setItem('cart_items_cache', JSON.stringify(items));
-                renderSummaryHTML(items);
+                // data.items es un array de objetos con { id, id_producto, cantidad, producto: {...} }
+                // Guardar cache completo
+                localStorage.setItem('cart_items_cache', JSON.stringify(data));
+                renderSummaryHTML(data.items || [], data.subtotal || 0);
 
             } catch (e) { console.error(e); }
         }
 
         // Mueve tu lógica de "pintar" a esta función separada
-        function renderSummaryHTML(items) {
+        function renderSummaryHTML(items, subtotalGeneral) {
             let html = '';
             let subtotal = 0;
-            Object.values(items).forEach(item => {
-                const subItem = parseFloat(item.subtotal);
-                subtotal += subItem;
-                html += `
-            <div class="d-flex align-items-center mb-3 border-bottom pb-2">
-                <img src="${item.imagen || 'https://placehold.co/50'}" class="rounded me-2" width="50" height="50" style="object-fit: contain;">
-                <div class="flex-grow-1 lh-1">
-                    <small class="fw-bold d-block text-truncate" style="max-width: 150px;">${item.nombre}</small>
-                    <small class="text-muted">x${item.cantidad}</small>
-                </div>
-                <span class="fw-bold small">$${subItem.toFixed(2)}</span>
-            </div>
-        `;
 
+            // items es un array, no un objeto
+            if (!items || items.length === 0) {
+                document.getElementById('checkout-items').innerHTML = '<p class="text-muted">No hay productos</p>';
+                document.getElementById('chk-subtotal').innerText = '$0.00';
+                document.getElementById('chk-iva').innerText = '$0.00';
+                document.getElementById('chk-total').innerText = '$0.00';
+                return;
+            }
+
+            items.forEach(item => {
+                const prod = item.producto; // relación cargada por el controlador
+                if (!prod) return;
+
+                const precio = parseFloat(prod.pro_precio_venta);
+                const subItem = item.cantidad * precio;
+                subtotal += subItem;
+
+                const imgUrl = prod.pro_imagen
+                    ? `/storage/${prod.pro_imagen}`
+                    : 'https://placehold.co/50';
+
+                html += `
+                <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                    <img src="${imgUrl}" class="rounded me-2" width="50" height="50" style="object-fit: contain;">
+                    <div class="flex-grow-1 lh-1">
+                        <small class="fw-bold d-block text-truncate" style="max-width: 150px;">${prod.pro_nombre}</small>
+                        <small class="text-muted">x${item.cantidad}</small>
+                    </div>
+                    <span class="fw-bold small">$${subItem.toFixed(2)}</span>
+                </div>
+            `;
             });
+
             const iva = subtotal * 0.15;
             const total = subtotal + iva;
+
             document.getElementById('checkout-items').innerHTML = html;
             document.getElementById('chk-subtotal').innerText = `$${subtotal.toFixed(2)}`;
             document.getElementById('chk-iva').innerText = `$${iva.toFixed(2)}`;
@@ -186,11 +210,11 @@
 
                 const data = await res.json();
 
-                if(res.ok) {
+                if (res.ok) {
                     // ÉXITO: Redirección inmediata a la página de confirmación
                     // Limpiamos el contador del carrito visualmente
                     const counter = document.getElementById('cartCounter');
-                    if(counter) counter.innerText = '0';
+                    if (counter) counter.innerText = '0';
 
                     // REDIRECCIÓN
                     window.location.href = `/confirmacion/${data.order_id}`;

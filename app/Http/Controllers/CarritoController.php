@@ -8,30 +8,46 @@ use Illuminate\Support\Facades\Auth;
 
 class CarritoController extends Controller
 {
+    /**
+     * Obtener resumen completo del carrito
+     */
     public function obtener()
     {
         return response()->json(Carrito::obtenerResumen(Auth::id()));
     }
 
+    /**
+     * Agregar o actualizar cantidad de producto
+     */
     public function agregar(Request $request)
     {
         try {
-            Carrito::agregarOActualizar(Auth::id(), $request->id_producto, $request->cantidad ?? 1);
+            Carrito::agregarOActualizar(
+                Auth::id(),
+                $request->id_producto,
+                $request->cantidad ?? 1
+            );
             return response()->json(['ok' => true]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         }
     }
 
+    /**
+     * Eliminar un item específico
+     */
     public function eliminar($id)
     {
-        Carrito::where('id', $id)->where('id_user', Auth::id())->delete();
-        return response()->json(['ok' => true]);
+        $success = Carrito::eliminarItem(Auth::id(), $id);
+        return response()->json(['ok' => $success]);
     }
 
+    /**
+     * Vaciar todo el carrito
+     */
     public function vaciar()
     {
-        Carrito::where('id_user', Auth::id())->delete();
+        Carrito::vaciarCarrito(Auth::id());
         return response()->json(['ok' => true]);
     }
 }

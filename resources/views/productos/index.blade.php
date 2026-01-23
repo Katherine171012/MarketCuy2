@@ -33,9 +33,8 @@
             <div class="row g-4 align-items-start">
                 <div class="col-lg-6">
                     @if(!empty($productoVer->pro_imagen))
-                        <img class="detail-img rounded-4"
-                             src="{{ asset('storage/' . $productoVer->pro_imagen) }}"
-                             alt="Imagen {{ $productoVer->pro_nombre }}">
+                        <img class="detail-img rounded-4" src="{{ asset('storage/' . $productoVer->pro_imagen) }}"
+                            alt="Imagen {{ $productoVer->pro_nombre }}">
                     @else
                         <div class="detail-img rounded-4 d-flex align-items-center justify-content-center text-muted">
                             Sin imagen
@@ -95,11 +94,8 @@
                     </div>
 
                     <div class="mt-4 d-grid gap-2">
-                        <button class="btn btn-concho btn-lg"
-                                id="btnAddCarrito"
-                                data-id="{{ $productoVer->id_producto }}"
-                                data-nombre="{{ $productoVer->pro_nombre }}"
-                                data-precio="{{ $productoVer->pro_precio_venta }}">
+                        <button class="btn btn-concho btn-lg" id="btnAddCarrito" data-id="{{ $productoVer->id_producto }}"
+                            data-nombre="{{ $productoVer->pro_nombre }}" data-precio="{{ $productoVer->pro_precio_venta }}">
                             <i class="fa-solid fa-cart-plus me-2"></i> Agregar al carrito
                         </button>
                     </div>
@@ -108,29 +104,29 @@
         </div>
 
         <script>
-            (function(){
+            (function () {
                 // --- QTY simple (no cambia lógica del sistema) ---
                 const minus = document.getElementById('btnMinus');
-                const plus  = document.getElementById('btnPlus');
-                const qty   = document.getElementById('txtQty');
-                function clamp(){
+                const plus = document.getElementById('btnPlus');
+                const qty = document.getElementById('txtQty');
+                function clamp() {
                     let n = parseInt(qty.value || '1', 10);
-                    if(isNaN(n) || n < 1) n = 1;
+                    if (isNaN(n) || n < 1) n = 1;
                     qty.value = n;
                     return n;
                 }
-                if(minus) minus.addEventListener('click', () => { clamp(); qty.value = Math.max(1, parseInt(qty.value,10)-1); });
-                if(plus)  plus.addEventListener('click',  () => { clamp(); qty.value = parseInt(qty.value,10)+1; });
-                if(qty)   qty.addEventListener('input', clamp);
+                if (minus) minus.addEventListener('click', () => { clamp(); qty.value = Math.max(1, parseInt(qty.value, 10) - 1); });
+                if (plus) plus.addEventListener('click', () => { clamp(); qty.value = parseInt(qty.value, 10) + 1; });
+                if (qty) qty.addEventListener('input', clamp);
 
                 // --- ADD carrito (tu lógica existente) ---
                 const btnAdd = document.getElementById('btnAddCarrito');
-                if(btnAdd){
+                if (btnAdd) {
                     btnAdd.addEventListener('click', () => {
                         const token = localStorage.getItem('auth_token');
                         const cantidadActual = clamp();
 
-                        if(!token){
+                        if (!token) {
                             window.location.href = "/login";
                             return;
                         }
@@ -146,6 +142,7 @@
                         }, 2000);
 
                         // LLAMADA A LA API DE POSTGRESQL
+                        const cantidadAgregar = cantidadActual; // Guardar para usar en la respuesta
                         fetch('/api/carrito/agregar', { // <--- URL CORREGIDA
                             method: 'POST',
                             headers: {
@@ -162,9 +159,14 @@
                             .then(async response => {
                                 const data = await response.json();
                                 if (response.ok) {
-                                    // Actualizar el contador del nav con el nuevo total que viene del servidor
-                                    // O simplemente recargar el contador llamando a la función del nav
-                                    fetchCart(); // Si tienes la función global
+                                    // ✅ ACTUALIZACIÓN INSTANTÁNEA: Incrementar contador inmediatamente
+                                    if (typeof incrementCartCounter === 'function') {
+                                        incrementCartCounter(cantidadAgregar);
+                                    }
+                                    // ✅ SINCRONIZACIÓN: Verificar con el servidor (en background)
+                                    if (typeof fetchCart === 'function') {
+                                        fetchCart();
+                                    }
                                 } else {
                                     alert(data.error || "Error al agregar");
                                 }
@@ -194,21 +196,21 @@
                     {{-- ✅ SECCIÓN OFERTAS (PROMOS) --}}
                     @php
                         $catFiltro = request('categoria', request('id_categoria'));
-                        $qFiltro   = request('q');
-                        $umFiltro  = request('unidad_medida');
+                        $qFiltro = request('q');
+                        $umFiltro = request('unidad_medida');
                         $ordFiltro = request('orden');
 
                         // Categoría "Todas" la consideramos NO filtro
-                        $catVal = strtolower(trim((string)($catFiltro ?? '')));
-                        $catActivo = ($catVal !== '' && !in_array($catVal, ['0','all','todas','toda','*'], true));
+                        $catVal = strtolower(trim((string) ($catFiltro ?? '')));
+                        $catActivo = ($catVal !== '' && !in_array($catVal, ['0', 'all', 'todas', 'toda', '*'], true));
 
                         // Orden "por defecto" NO debe contar como filtro (normalmente id_asc)
-                        $ordVal = strtolower(trim((string)($ordFiltro ?? '')));
-                        $ordenActivo = ($ordVal !== '' && !in_array($ordVal, ['id_asc','default'], true));
+                        $ordVal = strtolower(trim((string) ($ordFiltro ?? '')));
+                        $ordenActivo = ($ordVal !== '' && !in_array($ordVal, ['id_asc', 'default'], true));
 
                         // Unidad vacía o "todas" NO cuenta como filtro
-                        $umVal = strtolower(trim((string)($umFiltro ?? '')));
-                        $unidadActiva = ($umVal !== '' && !in_array($umVal, ['all','todas','toda','*'], true));
+                        $umVal = strtolower(trim((string) ($umFiltro ?? '')));
+                        $unidadActiva = ($umVal !== '' && !in_array($umVal, ['all', 'todas', 'toda', '*'], true));
 
                         $hayFiltros = $catActivo || $ordenActivo || $unidadActiva || ($qFiltro !== null && trim($qFiltro) !== '');
                     @endphp
@@ -246,7 +248,7 @@
                                                 </div>
 
                                                 <a class="btn btn-concho product-btn"
-                                                   href="{{ route('productos.index', ['view' => $o->id_producto]) }}">
+                                                    href="{{ route('productos.index', ['view' => $o->id_producto]) }}">
                                                     Ver detalles
                                                 </a>
                                             </div>
@@ -275,8 +277,7 @@
                                 $cat = $p->categoria?->cat_nombre ?? 'Sin categoría';
                             @endphp
 
-                            <div class="col-12 col-md-6 col-lg-4 producto-item"
-                                 data-precio="{{ (float)$p->pro_precio_venta }}">
+                            <div class="col-12 col-md-6 col-lg-4 producto-item" data-precio="{{ (float) $p->pro_precio_venta }}">
                                 <div class="product-card h-100 position-relative">
                                     <div class="imgwrap">
                                         <img src="{{ $img }}" alt="Imagen {{ $p->pro_nombre }}">
@@ -302,7 +303,7 @@
                                         </div>
 
                                         <a class="btn btn-concho product-btn"
-                                           href="{{ route('productos.index', ['view' => $p->id_producto]) }}">
+                                            href="{{ route('productos.index', ['view' => $p->id_producto]) }}">
                                             Ver detalles
                                         </a>
                                     </div>
@@ -329,7 +330,7 @@
         </div>
 
         <script>
-            (function(){
+            (function () {
                 const range = document.getElementById('rangePrecio');
                 const lbl = document.getElementById('lblPrecio');
 
@@ -337,7 +338,7 @@
                     ? parseFloat(range.max || range.getAttribute('max') || range.value || '0')
                     : null;
 
-                function aplicar(){
+                function aplicar() {
                     const max = range ? parseFloat(range.value || '999999') : Infinity;
 
                     // Recalcular SIEMPRE (porque el grid puede cambiar por AJAX)
@@ -348,13 +349,13 @@
                     });
 
                     // Label del slider
-                    if(lbl && range){
+                    if (lbl && range) {
                         lbl.textContent = 'Hasta $' + parseFloat(range.value || '0').toFixed(2);
                     }
 
                     // Ocultar ofertas si el usuario movió el precio y restaurar al máximo
                     const ofertasSection = document.getElementById('ofertasSection');
-                    if(ofertasSection && range && maxDefault !== null){
+                    if (ofertasSection && range && maxDefault !== null) {
                         const sliderActual = parseFloat(range.value || '0');
                         const mostrarOfertas = (sliderActual >= maxDefault);
                         ofertasSection.style.display = mostrarOfertas ? '' : 'none';
@@ -364,7 +365,7 @@
                 // Exponer para el AJAX del buscador
                 window.applyPriceFilter = aplicar;
 
-                if(range) range.addEventListener('input', aplicar);
+                if (range) range.addEventListener('input', aplicar);
                 aplicar();
             })();
         </script>

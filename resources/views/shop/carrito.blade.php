@@ -13,7 +13,7 @@
                     <!-- Spinner de carga inicial -->
                     <div class="text-center p-5">
                         <div class="spinner-border text-danger" role="status"></div>
-                        <p class="mt-2">Cargando tus productos desde la nube...</p>
+                        <p class="mt-2">Cargando tus productos...</p>
                     </div>
                 </div>
             </div>
@@ -41,7 +41,8 @@
                     </div>
 
                     {{-- Botón de Checkout --}}
-                    <button id="btn-finalizar" onclick="irAlCheckout()" class="btn btn-danger w-100 mt-3 py-2 fw-bold" disabled>
+                    <button id="btn-finalizar" onclick="irAlCheckout()" class="btn btn-danger w-100 mt-3 py-2 fw-bold"
+                        disabled>
                         Finalizar Compra
                     </button>
 
@@ -68,13 +69,14 @@
                 });
 
                 if (response.status === 401) {
-                    window.location.href = '/login'; // Redirigir si la sesión expiró
+                    window.location.href = '/login';
                     return;
                 }
 
                 const data = await response.json();
-                renderCart(data.items, data.subtotal);
-                actualizarContadorNav(data.items);
+                // data ya trae: { items, subtotal, iva, total, conteo }
+                renderCart(data);
+                actualizarContadorNav(data.conteo);
 
             } catch (error) {
                 console.error("Error cargando el carrito:", error);
@@ -84,19 +86,21 @@
         }
 
         // 3. Renderizar el HTML de los productos
-        function renderCart(items, subtotalGeneral) {
+        function renderCart(data) {
             const container = document.getElementById('cart-items');
             const btnFinalizar = document.getElementById('btn-finalizar');
             let html = '';
 
-            if (!items || items.length === 0) {
+            const items = data.items || [];
+
+            if (items.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center p-5 bg-white rounded shadow-sm">
-                        <i class="fa-solid fa-cart-shopping fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Tu carrito está vacío.</p>
-                        <a href="{{ route('productos.index') }}" class="btn btn-outline-danger btn-sm">Ir a comprar</a>
-                    </div>`;
-                updateTotals(0);
+                                        <div class="text-center p-5 bg-white rounded shadow-sm">
+                                            <i class="fa-solid fa-cart-shopping fa-3x text-muted mb-3"></i>
+                                            <p class="text-muted">Tu carrito está vacío.</p>
+                                            <a href="{{ route('productos.index') }}" class="btn btn-outline-danger btn-sm">Ir a comprar</a>
+                                        </div>`;
+                updateTotals({ subtotal: 0, iva: 0, total: 0 });
                 btnFinalizar.disabled = true;
                 return;
             }
@@ -110,62 +114,107 @@
                 const imgUrl = prod.pro_imagen || 'https://placehold.co/80?text=Sin+Imagen';
 
                 html += `
-                <div class="card mb-3 p-3 shadow-sm border-0 animate__animated animate__fadeIn">
-                    <div class="row align-items-center">
-                        <!-- Imagen -->
-                        <div class="col-3 col-md-2">
-                            <img src="${imgUrl}" class="img-fluid rounded" style="max-height: 80px; width: 100%; object-fit: contain;">
-                        </div>
+                                    <div class="card mb-3 p-3 shadow-sm border-0 animate__animated animate__fadeIn" data-cart-id="${item.id}" data-product-id="${prod.id_producto}">
+                                        <div class="row align-items-center">
+                                            <!-- Imagen -->
+                                            <div class="col-3 col-md-2">
+                                                <img src="${imgUrl}" class="img-fluid rounded" style="max-height: 80px; width: 100%; object-fit: contain;">
+                                            </div>
 
-                        <!-- Info -->
-                        <div class="col-9 col-md-5">
-                            <h6 class="fw-bold mb-0 text-dark">${prod.pro_nombre}</h6>
-                            <small class="text-muted">$${precio.toFixed(2)} c/u</small>
-                        </div>
+                                            <!-- Info -->
+                                            <div class="col-9 col-md-5">
+                                                <h6 class="fw-bold mb-0 text-dark">${prod.pro_nombre}</h6>
+                                                <small class="text-muted">$${precio.toFixed(2)} c/u</small>
+                                            </div>
 
-                        <!-- Cantidad -->
-                        <div class="col-6 col-md-3 text-center mt-3 mt-md-0">
-                            <div class="btn-group btn-group-sm shadow-sm">
-                                <button class="btn btn-white border" onclick="changeQty('${prod.id_producto}', -1)">
-                                    <i class="fa-solid fa-minus text-muted"></i>
-                                </button>
-                                <span class="px-3 py-1 bg-white border-top border-bottom d-flex align-items-center justify-content-center fw-bold" style="min-width: 45px;">
-                                    ${item.cantidad}
-                                </span>
-                                <button class="btn btn-white border" onclick="changeQty('${prod.id_producto}', 1)">
-                                    <i class="fa-solid fa-plus text-muted"></i>
-                                </button>
-                            </div>
-                        </div>
+                                            <!-- Cantidad -->
+                                            <div class="col-6 col-md-3 text-center mt-3 mt-md-0">
+                                                <div class="btn-group btn-group-sm shadow-sm">
+                                                    <button class="btn btn-white border btn-qty-minus" data-product="${prod.id_producto}">
+                                                        <i class="fa-solid fa-minus text-muted"></i>
+                                                    </button>
+                                                    <span class="px-3 py-1 bg-white border-top border-bottom d-flex align-items-center justify-content-center fw-bold qty-display" data-product="${prod.id_producto}" data-precio="${precio}" style="min-width: 45px;">
+                                                        ${item.cantidad}
+                                                    </span>
+                                                    <button class="btn btn-white border btn-qty-plus" data-product="${prod.id_producto}">
+                                                        <i class="fa-solid fa-plus text-muted"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
 
-                        <!-- Subtotal y Eliminar -->
-                        <div class="col-6 col-md-2 text-end mt-3 mt-md-0">
-                            <div class="fw-bold text-danger fs-5">$${subItem.toFixed(2)}</div>
-                            <button onclick="deleteItem(${item.id})" class="btn btn-link text-muted p-0 mt-1 hover-danger">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>`;
+                                            <!-- Subtotal y Eliminar -->
+                                            <div class="col-6 col-md-2 text-end mt-3 mt-md-0">
+                                                <div class="fw-bold text-danger fs-5 item-subtotal" data-product="${prod.id_producto}">$${subItem.toFixed(2)}</div>
+                                                <button class="btn btn-link text-muted p-0 mt-1 hover-danger btn-delete" data-cart-id="${item.id}">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>`;
             });
 
             container.innerHTML = html;
-            updateTotals(subtotalGeneral);
+            attachEventListeners();
+            // Usar totales calculados por el servidor
+            updateTotals(data);
         }
 
-        // 4. Actualizar Totales (Subtotal, IVA, Total)
-        function updateTotals(subtotal) {
-            const IVA_RATE = 0.15;
-            const iva = subtotal * IVA_RATE;
-            const total = subtotal + iva;
-
-            document.getElementById('subtotal').innerText = `$${subtotal.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            document.getElementById('iva').innerText = `$${iva.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            document.getElementById('total').innerText = `$${total.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        // Función para vincular eventos a los botones después de renderizar
+        function attachEventListeners() {
+            // Botones + cantidad
+            document.querySelectorAll('.btn-qty-plus').forEach(btn => {
+                btn.onclick = () => changeQty(btn.dataset.product, 1);
+            });
+            // Botones - cantidad
+            document.querySelectorAll('.btn-qty-minus').forEach(btn => {
+                btn.onclick = () => changeQty(btn.dataset.product, -1);
+            });
+            // Botones eliminar
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.onclick = () => deleteItem(btn.dataset.cartId);
+            });
         }
 
-        // 5. Cambiar Cantidad (Incrementar / Decrementar)
+        // 4. Actualizar Totales - USA VALORES DEL API
+        function updateTotals(data) {
+            document.getElementById('subtotal').innerText = `$${(data.subtotal || 0).toFixed(2)}`;
+            document.getElementById('iva').innerText = `$${(data.iva || 0).toFixed(2)}`;
+            document.getElementById('total').innerText = `$${(data.total || 0).toFixed(2)}`;
+        }
+
+        // 5. Cambiar Cantidad (CON UI OPTIMISTA - Actualización instantánea)
         async function changeQty(id_producto, cantidadCambio) {
+            // Encontrar el elemento de cantidad y subtotal
+            const qtyEl = document.querySelector(`.qty-display[data-product="${id_producto}"]`);
+            const subEl = document.querySelector(`.item-subtotal[data-product="${id_producto}"]`);
+
+            if (!qtyEl) return;
+
+            const precio = parseFloat(qtyEl.dataset.precio) || 0;
+            const cantidadActual = parseInt(qtyEl.innerText.trim(), 10) || 0;
+            const nuevaCantidad = cantidadActual + cantidadCambio;
+
+            // No permitir cantidad menor a 1
+            if (nuevaCantidad < 1) {
+                return;
+            }
+
+            // ✅ UI OPTIMISTA: Actualizar visualmente ANTES de llamar al servidor
+            qtyEl.innerText = nuevaCantidad;
+            if (subEl) {
+                subEl.innerText = `$${(nuevaCantidad * precio).toFixed(2)}`;
+            }
+
+            // Recalcular totales optimistamente
+            recalcularTotales();
+
+            // Actualizar contador del nav
+            const counter = document.getElementById('cartCounter');
+            if (counter) {
+                const currentCount = parseInt(counter.innerText || '0', 10);
+                counter.innerText = currentCount + cantidadCambio;
+            }
+
             try {
                 const response = await fetch('/api/carrito/agregar', {
                     method: 'POST',
@@ -180,59 +229,156 @@
                 const resData = await response.json();
 
                 if (!response.ok) {
+                    // Revertir cambios si falla
+                    qtyEl.innerText = cantidadActual;
+                    if (subEl) {
+                        subEl.innerText = `$${(cantidadActual * precio).toFixed(2)}`;
+                    }
+                    recalcularTotales();
                     alert(resData.error || "No se pudo actualizar el stock.");
                     return;
                 }
 
-                fetchCart(); // Recargar datos
+                // Sincronizar con servidor para obtener datos reales
+                setTimeout(() => fetchCart(), 300); // Pequeño delay para mejor UX
+
             } catch (e) {
                 console.error(e);
+                // Revertir en caso de error de red
+                qtyEl.innerText = cantidadActual;
+                if (subEl) {
+                    subEl.innerText = `$${(cantidadActual * precio).toFixed(2)}`;
+                }
+                recalcularTotales();
             }
         }
 
-        // 6. Eliminar un item de la base de datos
+        // Función auxiliar para recalcular totales basado en el DOM actual (UI optimista)
+        function recalcularTotales() {
+            let subtotal = 0;
+            document.querySelectorAll('.qty-display').forEach(el => {
+                const cantidad = parseInt(el.innerText.trim(), 10) || 0;
+                const precio = parseFloat(el.dataset.precio) || 0;
+                subtotal += cantidad * precio;
+            });
+
+            // Calcular IVA y total (mismo que el backend)
+            const iva = subtotal * 0.15;
+            const total = subtotal + iva;
+
+            updateTotals({ subtotal, iva, total });
+        }
+
+        // 6. Eliminar un item de la base de datos - ULTRA RÁPIDO
         async function deleteItem(id_carrito) {
-            if(!confirm("¿Deseas quitar este producto de tu carrito?")) return;
+            if (!confirm("¿Deseas quitar este producto de tu carrito?")) return;
 
+            // UI Optimista: Eliminar el item del DOM inmediatamente
+            const itemCard = document.querySelector(`[data-cart-id="${id_carrito}"]`);
+            if (!itemCard) return;
+
+            // Animación de salida rápida
+            itemCard.style.transition = 'all 0.2s';
+            itemCard.style.opacity = '0';
+            itemCard.style.transform = 'translateX(-20px)';
+
+            // Esperar que termine la animación
+            setTimeout(() => {
+                itemCard.remove();
+
+                // Recalcular totales inmediatamente con los items restantes
+                recalcularTotales();
+
+                // Actualizar contador del navbar
+                const itemsRestantes = document.querySelectorAll('[data-cart-id]').length;
+                actualizarContadorNav(itemsRestantes);
+
+                // Si no quedan items, mostrar mensaje de carrito vacío
+                if (itemsRestantes === 0) {
+                    const container = document.getElementById('cart-items');
+                    container.innerHTML = `
+                                <div class="text-center p-5 bg-white rounded shadow-sm">
+                                    <i class="fa-solid fa-cart-shopping fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Tu carrito está vacío.</p>
+                                    <a href="{{ route('productos.index') }}" class="btn btn-outline-danger btn-sm">Ir a comprar</a>
+                                </div>`;
+                    updateTotals({ subtotal: 0, iva: 0, total: 0 });
+                    document.getElementById('btn-finalizar').disabled = true;
+                }
+            }, 200);
+
+            // Sincronizar con servidor en background (sin esperar)
             try {
-                await fetch(`/api/carrito/eliminar/${id_carrito}`, {
+                const response = await fetch(`/api/carrito/eliminar/${id_carrito}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${getToken()}`,
                         'Accept': 'application/json'
                     }
                 });
-                fetchCart();
+
+                if (!response.ok) {
+                    // Si falla, recargar desde servidor para corregir
+                    setTimeout(() => fetchCart(), 500);
+                }
             } catch (e) {
-                console.error(e);
+                console.error('Error eliminando item:', e);
+                // Si hay error de red, recargar para asegurar consistencia
+                setTimeout(() => fetchCart(), 500);
             }
         }
 
-        // 7. Vaciar todo
+        // 7. Vaciar todo - CON UI OPTIMISTA
         async function vaciarCarrito() {
-            if(!confirm("¿Estás seguro de que quieres vaciar todo el carrito?")) return;
+            if (!confirm("¿Estás seguro de que quieres vaciar todo el carrito?")) return;
+
+            // UI Optimista: Mostrar spinner inmediatamente
+            const container = document.getElementById('cart-items');
+            const originalHTML = container.innerHTML;
+            container.innerHTML = `
+                                    <div class="text-center p-5">
+                                        <div class="spinner-border text-danger" role="status"></div>
+                                        <p class="mt-2">Vaciando carrito...</p>
+                                    </div>`;
 
             try {
-                await fetch('/api/carrito/vaciar', {
+                const response = await fetch('/api/carrito/vaciar', {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${getToken()}`,
                         'Accept': 'application/json'
                     }
                 });
+
+                if (!response.ok) {
+                    throw new Error('Error al vaciar');
+                }
+
+                // Éxito: Recargar carrito (mostrará vacío)
                 fetchCart();
+
+                // Actualizar contador del nav a 0
+                const counter = document.getElementById('cartCounter');
+                if (counter) {
+                    counter.innerText = '0';
+                    localStorage.setItem('cart_count_cache', '0');
+                }
+
             } catch (e) {
-                console.error(e);
+                console.error('Error vaciando carrito:', e);
+                // Restaurar UI si falla
+                container.innerHTML = originalHTML;
+                alert('Error al vaciar el carrito. Intenta de nuevo.');
             }
         }
 
         // 8. Utilidad: Actualizar numerito en Navbar
-        function actualizarContadorNav(items) {
-            const totalQty = items.reduce((acc, item) => acc + item.cantidad, 0);
+        function actualizarContadorNav(conteo) {
             const counter = document.getElementById('cartCounter');
-            if(counter) {
-                counter.innerText = totalQty;
-                counter.style.display = totalQty > 0 ? 'block' : 'none';
+            if (counter) {
+                counter.innerText = conteo || 0;
+                counter.style.display = (conteo > 0) ? 'block' : 'none';
+                localStorage.setItem('cart_count_cache', conteo);
             }
         }
 
@@ -245,8 +391,17 @@
     </script>
 
     <style>
-        .hover-danger:hover { color: #dc3545 !important; }
-        .btn-white { background: #fff; color: #6c757d; }
-        .btn-white:hover { background: #f8f9fa; }
+        .hover-danger:hover {
+            color: #dc3545 !important;
+        }
+
+        .btn-white {
+            background: #fff;
+            color: #6c757d;
+        }
+
+        .btn-white:hover {
+            background: #f8f9fa;
+        }
     </style>
 @endsection
