@@ -104,14 +104,14 @@
         <form id="registerForm">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label>Cédula / RUC</label>
+                    <label>Cédula / RUC * </label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa-solid fa-id-card"></i></span>
                         <input type="text" id="identificacion" class="form-control" placeholder="1712345678" required>
                     </div>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label>Nombre Completo</label>
+                    <label>Nombre Completo *</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
                         <input type="text" id="nombre" class="form-control" placeholder="Juan Pérez" required>
@@ -121,7 +121,7 @@
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label>Correo Electrónico</label>
+                    <label>Correo Electrónico * </label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
                         <input type="email" id="email" class="form-control" placeholder="correo@ejemplo.com" required>
@@ -132,7 +132,7 @@
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa-solid fa-city"></i></span>
                         <select id="id_ciudad" class="form-select" required>
-                            <option value="" selected disabled>Cargando ciudades...</option>
+                            <option value="" selected disabled>Cargando ciudades</option>
                         </select>
                     </div>
                 </div>
@@ -141,7 +141,7 @@
             <div class="row">
                 <!-- Teléfono Fijo (Opcional) -->
                 <div class="col-md-4 mb-3">
-                    <label>Teléfono Fijo</label>
+                    <label>Teléfono Fijo (Opcional) </label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
                         <input type="text" id="telefono" class="form-control" placeholder="022...">
@@ -149,7 +149,7 @@
                 </div>
                 <!-- Celular (Opcional) -->
                 <div class="col-md-4 mb-3">
-                    <label>Celular</label>
+                    <label>Celular * </label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa-solid fa-mobile-screen"></i></span>
                         <input type="text" id="celular" class="form-control" placeholder="099...">
@@ -157,7 +157,7 @@
                 </div>
                 <!-- Dirección -->
                 <div class="col-md-4 mb-3">
-                    <label>Dirección</label>
+                    <label>Dirección * </label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa-solid fa-map-location-dot"></i></span>
                         <input type="text" id="direccion" class="form-control" placeholder="Calle...">
@@ -166,7 +166,7 @@
             </div>
 
             <div class="mb-4">
-                <label>Contraseña</label>
+                <label>Contraseña *</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
                     <input type="password" id="password" class="form-control" placeholder="Mínimo 8 caracteres" required>
