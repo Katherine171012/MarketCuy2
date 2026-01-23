@@ -329,7 +329,7 @@
                         {{ $productos->links('pagination::bootstrap-4') }}
                     </div>
 
-                </div>{{-- /productosContenido --}}
+                </div>
 
             </div>
         </div>
@@ -345,15 +345,12 @@
 
                 function aplicar(){
                     const max = range ? parseFloat(range.value || '999999') : Infinity;
-
-                    // Recalcular SIEMPRE (porque el grid puede cambiar por AJAX)
                     const items = Array.from(document.querySelectorAll('.producto-item'));
                     items.forEach(el => {
                         const precio = parseFloat(el.getAttribute('data-precio') || '0');
                         el.style.display = (precio <= max) ? '' : 'none';
                     });
 
-                    // Label del slider
                     if(lbl && range){
                         lbl.textContent = 'Hasta $' + parseFloat(range.value || '0').toFixed(2);
                     }
