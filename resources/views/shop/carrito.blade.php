@@ -13,7 +13,7 @@
                     <!-- Spinner de carga inicial -->
                     <div class="text-center p-5">
                         <div class="spinner-border text-danger" role="status"></div>
-                        <p class="mt-2">Cargando tus productos desde la nube...</p>
+                        <p class="mt-2"></p>
                     </div>
                 </div>
             </div>
