@@ -25,20 +25,18 @@
         <div class="row g-3 justify-content-center">
             @foreach($categorias as $cat)
                 {{--
-                   COLUMNAS:
-                   col-6: 2 por fila en celular (pequeñas)
-                   col-md-3: 4 por fila en tablet
-                   col-lg-2: 6 por fila en PC (compactas)
+                COLUMNAS:
+                col-6: 2 por fila en celular (pequeñas)
+                col-md-3: 4 por fila en tablet
+                col-lg-2: 6 por fila en PC (compactas)
                 --}}
                 <div class="col-6 col-md-3 col-lg-3">
 
-                    <a href="{{ route('productos.index', ['categoria' => $cat->id_categoria]) }}"
-                       class="cat-tile shadow-sm">
+                    <a href="{{ route('productos.index', ['categoria' => $cat->id_categoria]) }}" class="cat-tile shadow-sm">
 
                         {{-- Imagen --}}
                         <img src="{{ asset('images/categorias/categoria' . $cat->id_categoria . '.jpg') }}"
-                             alt="{{ $cat->cat_nombre }}"
-                             onerror="this.style.display='none';">
+                            alt="{{ $cat->cat_nombre }}" onerror="this.style.display='none';">
                         {{-- Si falla la imagen, la ocultamos para ver el fondo de color --}}
 
                         {{-- Texto centrado --}}
@@ -71,15 +69,15 @@
 
                             {{-- Imagen del producto --}}
                             <div class="imgwrap position-relative overflow-hidden" style="height: 200px;">
-                                <img src="{{ $prod->pro_imagen ? asset('images/'.$prod->pro_imagen) : 'https://placehold.co/400x300?text=Sin+Imagen' }}"
-                                     alt="{{ $prod->pro_nombre }}"
-                                     class="w-100 h-100 object-fit-cover"
-                                     onerror="this.src='https://placehold.co/400x300?text=Sin+Foto'">
+                                <img src="{{ $prod->pro_imagen ? asset('images/' . $prod->pro_imagen) : 'https://placehold.co/400x300?text=Sin+Imagen' }}"
+                                    alt="{{ $prod->pro_nombre }}" class="w-100 h-100 object-fit-cover" loading="lazy"
+                                    onerror="this.src='https://placehold.co/400x300?text=Sin+Foto'">
                             </div>
 
                             <div class="p-3">
                                 {{-- Nombre Categoría --}}
-                                <div class="badge-cat mb-2 text-primary bg-primary-subtle px-2 py-1 rounded-pill d-inline-block small fw-bold">
+                                <div
+                                    class="badge-cat mb-2 text-primary bg-primary-subtle px-2 py-1 rounded-pill d-inline-block small fw-bold">
                                     {{ $prod->categoria->cat_nombre ?? 'General' }}
                                 </div>
 
@@ -89,8 +87,8 @@
                                 </h5>
 
                                 {{--
-                                    AQUÍ QUITAMOS LAS ESTRELLAS Y EL CONTADOR VISUAL.
-                                    Ya no hay nada entre el título y el precio.
+                                AQUÍ QUITAMOS LAS ESTRELLAS Y EL CONTADOR VISUAL.
+                                Ya no hay nada entre el título y el precio.
                                 --}}
 
                                 {{-- Sección de Precios --}}
@@ -111,7 +109,7 @@
                                 {{-- Botón de Acción --}}
                                 {{-- Al hacer clic, va al controlador, suma +1 al click_count y redirige --}}
                                 <a href="{{ route('producto.click', $prod->id_producto) }}"
-                                   class="btn btn-concho w-100 fw-bold">
+                                    class="btn btn-concho w-100 fw-bold">
                                     Ver detalles
                                 </a>
                             </div>
