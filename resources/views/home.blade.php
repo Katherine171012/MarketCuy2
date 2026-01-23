@@ -36,7 +36,7 @@
                        class="cat-tile shadow-sm">
 
                         {{-- Imagen --}}
-                        <img src="{{ asset('storage/categorias/categoria' . $cat->id_categoria . '.jpg') }}"
+                        <img src="{{ asset('images/categorias/categoria' . $cat->id_categoria . '.jpg') }}"
                              alt="{{ $cat->cat_nombre }}"
                              onerror="this.style.display='none';">
                         {{-- Si falla la imagen, la ocultamos para ver el fondo de color --}}
@@ -71,7 +71,7 @@
 
                             {{-- Imagen del producto --}}
                             <div class="imgwrap position-relative overflow-hidden" style="height: 200px;">
-                                <img src="{{ $prod->pro_imagen ? asset('storage/'.$prod->pro_imagen) : 'https://placehold.co/400x300?text=Sin+Imagen' }}"
+                                <img src="{{ $prod->pro_imagen ? asset('images/'.$prod->pro_imagen) : 'https://placehold.co/400x300?text=Sin+Imagen' }}"
                                      alt="{{ $prod->pro_nombre }}"
                                      class="w-100 h-100 object-fit-cover"
                                      onerror="this.src='https://placehold.co/400x300?text=Sin+Foto'">

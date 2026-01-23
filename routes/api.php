@@ -4,7 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CarritoController; // <-- ASEGÚRATE DE IMPORTAR ESTE
+use App\Http\Controllers\CiudadController;
 
+Route::get('/ciudades', [CiudadController::class, 'index']);
 // --- RUTAS PÚBLICAS ---
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
