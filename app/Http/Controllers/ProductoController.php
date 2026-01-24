@@ -7,6 +7,7 @@ use App\Models\UnidadMedida;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ProductoController extends Controller
 {
@@ -22,6 +23,18 @@ class ProductoController extends Controller
         return view($view, $data);
     }
 
+    /**
+     * ✅ Seed de mezcla estable por sesión (NUEVO)
+     */
+    private function mixSeed(Request $request): string
+    {
+        $key = 'productos_mix_seed';
+        if (!$request->session()->has($key)) {
+            $request->session()->put($key, Str::random(16));
+        }
+        return (string)$request->session()->get($key);
+    }
+
     public function index(Request $request)
     {
         $perPage = (int) $request->get('per_page', 10);
@@ -29,19 +42,22 @@ class ProductoController extends Controller
             $perPage = 10;
         }
 
+        $seed = $this->mixSeed($request);
+
         $catId = $request->get('categoria');
 
         if ($catId) {
-            $productos = Producto::paginarActivosConFiltros(null, $catId, null, null, $perPage);
+            // si filtra por categoría desde home, igual queda MIX por defecto
+            $productos = Producto::paginarActivosConFiltros('mix', $catId, null, null, $perPage, $seed);
         } else {
-            $productos = Producto::obtenerParaLista($perPage);
+            $productos = Producto::obtenerParaLista($perPage, $seed);
         }
+
         $productos->appends($request->except('page'));
 
         $unidades   = UnidadMedida::listar();
         $categorias = Categoria::listarActivas();
 
-        // ✅ NUEVO: Ofertas (para mostrar en sección productos)
         $ofertas = Producto::obtenerOfertas(6);
 
         $editId = $request->get('edit');
@@ -88,7 +104,7 @@ class ProductoController extends Controller
             'productos' => $productos,
             'unidades' => $unidades,
             'categorias' => $categorias,
-            'ofertas' => $ofertas, // ✅ NUEVO
+            'ofertas' => $ofertas,
             'productoEditar' => $productoEditar,
             'productoEliminar' => $productoEliminar,
             'productoVer' => $productoVer,
@@ -315,7 +331,9 @@ class ProductoController extends Controller
             $perPage = 10;
         }
 
-        $orden       = $request->input('orden');
+        $seed = $this->mixSeed($request);
+
+        $orden       = $request->input('orden');        // ahora puede ser 'mix'
         $idCategoria = $request->input('id_categoria');
         $unidad      = $request->input('unidad_medida');
         $q           = $request->input('q');
@@ -325,6 +343,7 @@ class ProductoController extends Controller
         $tieneUnidad     = ($unidad !== null && $unidad !== '');
         $tieneQ          = ($q !== null && trim($q) !== '');
 
+        // Si viene vacio TODO, error como antes
         if (!$tieneOrden && !$tieneCategoria && !$tieneUnidad && !$tieneQ) {
             return back()->withErrors([
                 'parametros' => $this->msg('M57')
@@ -337,7 +356,8 @@ class ProductoController extends Controller
                 $idCategoria,
                 $unidad,
                 $q,
-                $perPage
+                $perPage,
+                $seed
             );
 
             if ($productos === null) {
@@ -351,14 +371,13 @@ class ProductoController extends Controller
             $unidades   = UnidadMedida::listar();
             $categorias = Categoria::listarActivas();
 
-            // ✅ NUEVO: Ofertas (para mostrar en sección productos también)
             $ofertas = Producto::obtenerOfertas(6);
 
             return $this->viewWithMsgs('productos.index', [
                 'productos' => $productos,
                 'unidades' => $unidades,
                 'categorias' => $categorias,
-                'ofertas' => $ofertas, // ✅ NUEVO
+                'ofertas' => $ofertas,
                 'productoEditar' => null,
                 'productoEliminar' => null,
                 'productoVer' => null,

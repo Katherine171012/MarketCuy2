@@ -5,7 +5,7 @@
 
         <form id="frmBuscarGlobal" method="GET" action="{{ route('productos.buscar') }}">
             {{-- Mantener filtros actuales --}}
-            <input type="hidden" name="orden" value="{{ request('orden','id_asc') }}">
+            <input type="hidden" name="orden" value="{{ request('orden','mix') }}">
             <input type="hidden" name="id_categoria" value="{{ request('id_categoria') }}">
             <input type="hidden" name="unidad_medida" value="{{ request('unidad_medida') }}">
 
@@ -46,7 +46,7 @@
 
             {{-- TODAS (mantiene búsqueda q) --}}
             <form method="GET" action="{{ route('productos.buscar') }}">
-                <input type="hidden" name="orden" value="{{ request('orden','id_asc') }}">
+                <input type="hidden" name="orden" value="{{ request('orden','mix') }}">
                 <input type="hidden" name="q" value="{{ $qSel }}">
                 <button type="submit"
                         class="side-chip {{ empty($catSel) ? 'active' : '' }}">
@@ -56,7 +56,7 @@
 
             @foreach(($categorias ?? []) as $cat)
                 <form method="GET" action="{{ route('productos.buscar') }}">
-                    <input type="hidden" name="orden" value="{{ request('orden','id_asc') }}">
+                    <input type="hidden" name="orden" value="{{ request('orden','mix') }}">
                     <input type="hidden" name="q" value="{{ $qSel }}">
                     <input type="hidden" name="id_categoria" value="{{ $cat->id_categoria }}">
                     <button type="submit"
@@ -80,8 +80,6 @@
 
 <script>
     (function () {
-        // Búsqueda en tiempo real SIN perder foco:
-        // en vez de form.submit() (que recarga y quita foco), hacemos fetch y reemplazamos el contenido. :contentReference[oaicite:2]{index=2}
         const form = document.getElementById('frmBuscarGlobal');
         const txt  = document.getElementById('txtBuscarLocal');
         if (!form || !txt) return;
@@ -96,7 +94,6 @@
                 const val = (v ?? '').toString().trim();
                 if (val !== '') url.searchParams.set(k, val);
             }
-            // siempre volver a página 1 cuando cambias el texto
             url.searchParams.delete('page');
             return url.toString();
         }
@@ -118,7 +115,6 @@
                 const nuevo = doc.getElementById('productosContenido');
                 const actual = document.getElementById('productosContenido');
 
-                // fallback seguro: si no encuentra el contenedor, navegamos normal
                 if (!nuevo || !actual) {
                     window.location.href = url;
                     return;
@@ -126,12 +122,10 @@
 
                 actual.innerHTML = nuevo.innerHTML;
 
-                // actualizar URL sin recargar (para que quede “shareable”)
                 if (history && history.replaceState) {
                     history.replaceState(null, '', url);
                 }
 
-                // re-aplicar filtro precio (porque el grid cambió)
                 if (typeof window.applyPriceFilter === 'function') {
                     window.applyPriceFilter();
                 }
@@ -140,7 +134,6 @@
                 window.location.href = url;
                 return;
             } finally {
-                // mantener foco y cursor
                 txt.focus({ preventScroll: true });
                 try { txt.setSelectionRange(caretStart, caretEnd); } catch (_) {}
             }
