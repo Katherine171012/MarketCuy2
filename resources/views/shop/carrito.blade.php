@@ -43,24 +43,24 @@
                                 </div>
 
                                 {{-- Cantidad --}}
+                                {{-- Cantidad --}}
                                 <div class="col-6 col-md-3 text-center mt-3 mt-md-0">
                                     <div class="btn-group btn-group-sm shadow-sm">
                                         <button class="btn btn-white border"
-                                            @click="changeQty(item.producto.id_producto, -1)"
-                                            :disabled="updatingItems[item.producto.id_producto] || false">
+                                            @click="changeQty(item.producto.id_producto, -1)">
                                             <i class="fa-solid fa-minus text-muted"></i>
                                         </button>
-                                        <span
-                                            class="px-3 py-1 bg-white border-top border-bottom d-flex align-items-center justify-content-center fw-bold position-relative"
-                                            style="min-width: 45px;">
-                                            <span x-show="!updatingItems[item.producto.id_producto]"
-                                                x-text="item.cantidad"></span>
-                                            <i x-show="updatingItems[item.producto.id_producto]"
-                                                class="fa-solid fa-spinner fa-spin text-danger"></i>
-                                        </span>
+
+                                        <!-- Input manual de cantidad -->
+                                        <input type="text"
+                                            class="form-control text-center border-top border-bottom border-start-0 border-end-0 rounded-0 px-0 fw-bold"
+                                            style="width: 50px; min-width: 50px;" :value="item.cantidad"
+                                            @keydown="validarInput($event)"
+                                            @change="updateManual(item, $event.target.value)"
+                                            @blur="updateManual(item, $event.target.value)" @focus="$event.target.select()">
+
                                         <button class="btn btn-white border"
-                                            @click="changeQty(item.producto.id_producto, 1)"
-                                            :disabled="updatingItems[item.producto.id_producto] || false">
+                                            @click="changeQty(item.producto.id_producto, 1)">
                                             <i class="fa-solid fa-plus text-muted"></i>
                                         </button>
                                     </div>
@@ -105,9 +105,9 @@
                     </div>
 
                     {{-- Botón de Checkout --}}
-                    <button @click="irAlCheckout()" class="btn btn-danger w-100 mt-3 py-2 fw-bold"
+                    <button @click="irAlCheckout()" class="btn btn-concho w-100 mt-3 py-2 fw-bold"
                         :disabled="items.length === 0">
-                        Finalizar Compra
+                        Finalizar Compra <i class="fa-solid fa-arrow-right ms-2"></i>
                     </button>
 
                     <button @click="confirmarVaciar()" class="btn btn-link btn-sm text-muted w-100 mt-2"
@@ -165,23 +165,15 @@
             return {
                 items: [],
                 loading: true,
-                updatingItems: {}, // 🔒 Track de items en proceso
+                pendingUpdates: {}, // ⏳ Cola de actualizaciones pendientes (Debounce)
                 IVA_RATE: 0.15,
 
-                // ✅ Computed properties (recalcula automáticamente)
                 get subtotal() {
-                    return this.items.reduce((sum, item) => {
-                        return sum + (item.cantidad * parseFloat(item.producto.pro_precio_venta));
-                    }, 0);
+                    return this.items.reduce((sum, item) => sum + (item.cantidad * parseFloat(item.producto.pro_precio_venta)), 0);
                 },
 
-                get iva() {
-                    return this.subtotal * this.IVA_RATE;
-                },
-
-                get total() {
-                    return this.subtotal + this.iva;
-                },
+                get iva() { return this.subtotal * this.IVA_RATE; },
+                get total() { return this.subtotal + this.iva; },
 
                 async init() {
                     await this.fetchCart();
@@ -195,40 +187,104 @@
                                 'Accept': 'application/json'
                             }
                         });
-
-                        if (response.status === 401) {
-                            window.location.href = '/login';
-                            return;
-                        }
-
+                        if (response.status === 401) { window.location.href = '/login'; return; }
                         const data = await response.json();
-                        this.items = data.items || [];
+
+                        // Corrección de rutas de imagen al cargar
+                        this.items = (data.items || []).map(item => {
+                            if (item.producto.pro_imagen && !item.producto.pro_imagen.startsWith('http')) {
+                                // Asegurar que use /images/ como prefijo si es ruta relativa
+                                const img = item.producto.pro_imagen.replace(/^\/?(storage\/)?/, '');
+                                item.producto.pro_imagen = `/images/${img}`;
+                            }
+                            return item;
+                        });
+
                         this.loading = false;
                         this.actualizarContadorNav();
                     } catch (error) {
-                        console.error("Error cargando el carrito:", error);
+                        console.error("Error cargando carrito:", error);
                         this.loading = false;
                     }
                 },
 
-                async changeQty(idProducto, cambio) {
-                    // 🔒 Prevenir clics múltiples
-                    if (this.updatingItems[idProducto]) {
-                        return; // Ya hay una actualización en proceso
+                // Validación estricta solo números (sin alertas)
+                validarInput(e) {
+                    // Permitir: borrado, tab, flechas, inicio, fin
+                    if ([46, 8, 9, 27, 13, 110, 190, 35, 36, 37, 39].indexOf(e.keyCode) !== -1 ||
+                        // Permitir: Ctrl+A, Command+A
+                        (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true))) {
+                        return;
                     }
+                    // Bloquear todo lo que no sea número
+                    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                        e.preventDefault();
+                    }
+                },
 
+                changeQty(idProducto, cambio) {
                     const item = this.items.find(i => i.producto.id_producto === idProducto);
                     if (!item) return;
 
                     const nuevaCantidad = item.cantidad + cambio;
-                    if (nuevaCantidad < 1) return;
+                    if (nuevaCantidad < 1) return; // Mínimo 1
 
-                    // Marcar como en proceso
-                    this.updatingItems[idProducto] = true;
-
-                    // ✅ Actualización optimista (Alpine reactivity)
-                    const cantidadOriginal = item.cantidad;
+                    // 1. UI INSTANTÁNEA (Optimista) 🚀
                     item.cantidad = nuevaCantidad;
+                    this.actualizarContadorNav(); // Feedback inmediato en navbar
+
+                    // 2. DEBOUNCE (Agrupar peticiones)
+                    // Si ya hay un envío pendiente para este producto, cancelar el anterior
+                    if (this.pendingUpdates[idProducto]) {
+                        clearTimeout(this.pendingUpdates[idProducto].timeout);
+                        // Sumar al delta acumulado
+                        this.pendingUpdates[idProducto].delta += cambio;
+                    } else {
+                        // Iniciar nuevo trackeo
+                        this.pendingUpdates[idProducto] = {
+                            delta: cambio,
+                            timeout: null,
+                            originalQty: item.cantidad - cambio // Guardar valor original porsiaca falla todo el batch
+                        };
+                    }
+
+                    // Configurar el envío tras 500ms de inactividad
+                    this.pendingUpdates[idProducto].timeout = setTimeout(() => {
+                        this.enviarActualizacion(idProducto);
+                    }, 500);
+                },
+
+                updateManual(item, valorString) {
+                    let nuevoValor = parseInt(valorString);
+                    if (isNaN(nuevoValor) || nuevoValor < 1) {
+                        nuevoValor = 1; // Mínimo seguro
+                    }
+
+                    // Calcular diferencia (delta) respecto al valor actual conocido por Alpine
+                    const delta = nuevoValor - item.cantidad;
+
+                    if (delta !== 0) {
+                        this.changeQty(item.producto.id_producto, delta);
+                    }
+
+                    // Asegurar consistencia visual
+                    this.$nextTick(() => {
+                        // Si el valor era inválido, Alpine necesita un empujón para refrescar el :value
+                        if (item.cantidad !== nuevoValor && delta === 0) {
+                            // Caso borde donde escribe un valor inválido y queremos restaurar
+                            // pero changeQty no corrió. Forzar actualización.
+                        }
+                    });
+                },
+
+                async enviarActualizacion(idProducto) {
+                    const update = this.pendingUpdates[idProducto];
+                    if (!update) return;
+
+                    const delta = update.delta;
+                    delete this.pendingUpdates[idProducto]; // Limpiar cola antes de enviar
+
+                    if (delta === 0) return; // Si sumó y restó y quedó igual, no hacer nada
 
                     try {
                         const response = await fetch('/api/carrito/agregar', {
@@ -240,32 +296,31 @@
                             },
                             body: JSON.stringify({
                                 id_producto: idProducto,
-                                cantidad: cambio
+                                cantidad: delta
                             })
                         });
 
                         const data = await response.json();
 
                         if (!response.ok) {
-                            // Revertir si falla
-                            item.cantidad = cantidadOriginal;
-                            this.mostrarToast(data.error || "Error al actualizar", 'error');
-                        } else {
-                            this.actualizarContadorNav();
-                            // Solo mostrar toast cada 3 clicks para no saturar
-                            if (Math.abs(cambio) === 1 && Math.random() > 0.7) {
-                                this.mostrarToast(data.message || 'Actualizado', 'success');
+                            // Si falla, revertir visualmente
+                            // Nota: esto puede ser inexacto si hubo muchas interacciones, 
+                            // pero es mejor que dejarlo desincronizado.
+                            const item = this.items.find(i => i.producto.id_producto === idProducto);
+                            if (item) {
+                                // Forzar recarga del carrito para asegurar consistencia real
+                                await this.fetchCart();
                             }
+                            this.mostrarToast(data.error || "Error de sincronización", 'error');
+                        } else {
+                            // Éxito silencioso (o toast muy sutil, pero el usuario pidió "instantáneo")
+                            // Opcional: console.log('Sincronizado');
                         }
                     } catch (error) {
                         console.error(error);
-                        item.cantidad = cantidadOriginal; // Revertir
+                        // Revertir full en error de red
+                        await this.fetchCart();
                         this.mostrarToast('Error de conexión', 'error');
-                    } finally {
-                        // Liberar el lock después de un pequeño delay
-                        setTimeout(() => {
-                            delete this.updatingItems[idProducto];
-                        }, 300);
                     }
                 },
 
@@ -306,7 +361,16 @@
                         const data = await response.json();
 
                         if (!response.ok) {
-                            // Restaurar si falla
+                            // Si es 404, significa que ya no existe en BD. ¡Eso es bueno!
+                            if (response.status === 404) {
+                                // No restaurar. Considerarlo eliminado.
+                                this.actualizarContadorNav();
+                                // Opcional: mostrar mensaje diferente
+                                // this.mostrarToast('El producto ya no estaba en el carrito', 'info');
+                                return;
+                            }
+
+                            // Restaurar fallo real (ej. 500, 401)
                             console.error('Error del servidor:', data);
                             this.items.splice(itemIndex, 0, itemBackup);
                             this.mostrarToast(data.error || 'Error al eliminar', 'error');
@@ -362,7 +426,36 @@
                     }
                 },
 
-                irAlCheckout() {
+                async irAlCheckout() {
+                    if (this.items.length === 0) {
+                        this.mostrarToast('Tu carrito está vacío', 'warning');
+                        return;
+                    }
+
+                    // Validar si hay tareas pendientes de sincronización (debounce activo)
+                    const pendingIds = Object.keys(this.pendingUpdates);
+                    if (pendingIds.length > 0) {
+                        this.mostrarToast('Por favor espera a que se actualice el carrito...', 'info');
+                        // Opcional: esperar activamente
+                        return;
+                    }
+
+                    // Validar stock de todos los items
+                    let hayError = false;
+                    for (const item of this.items) {
+                        const stock = parseFloat(item.producto.pro_saldo_final || 0);
+                        if (item.cantidad > stock) {
+                            this.mostrarToast(`El producto "${item.producto.pro_nombre}" excede el stock disponible (${stock})`, 'danger');
+                            // Resaltar visualmente el item si es posible (opcional)
+                            hayError = true;
+                            // Corregir localmente para ayudar al usuario
+                            // item.cantidad = stock; // ¿Opcional? Mejor dejar que el usuario vealo
+                        }
+                    }
+
+                    if (hayError) return;
+
+                    // Si todo está bien, navegar
                     window.location.href = '{{ route('checkout.index') }}';
                 },
 

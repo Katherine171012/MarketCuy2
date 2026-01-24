@@ -14,7 +14,15 @@ class CarritoController extends Controller
      */
     public function obtener()
     {
-        return response()->json(Carrito::obtenerResumen(Auth::id()));
+        try {
+            return response()->json(Carrito::obtenerResumen(Auth::id()));
+        } catch (\Exception $e) {
+            \Log::error('Error 500 en CarritoController@obtener: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Error interno del servidor'], 500);
+        }
     }
 
     /**
