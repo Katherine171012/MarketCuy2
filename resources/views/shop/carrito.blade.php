@@ -252,7 +252,7 @@
                 },
 
                 irAlCheckout() {
-                    window.location.href = {{ route('checkout.index') }};
+                    window.location.href = '{{ route('checkout.index') }}';
                 },
 
                 actualizarContadorNav() {
