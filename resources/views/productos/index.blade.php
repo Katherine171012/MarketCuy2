@@ -348,7 +348,7 @@
 
             </div>
         </div>
-
+        /* ====== funcion ====== */
         <script>
             (function(){
                 const range = document.getElementById('rangePrecio');

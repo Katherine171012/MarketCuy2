@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\UnidadMedida;
 use App\Models\Categoria;
 use Illuminate\Support\Facades\DB;
+/* ====== Producto ====== */
+use Illuminate\Support\Facades\Cache;
 
 class Producto extends Model
 {

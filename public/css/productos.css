@@ -1173,7 +1173,7 @@ body.scrolled .hero-contacto {
     .nosotros-hero .display-4{
         -webkit-text-stroke: 1px rgba(0,0,0,.35);
     }
-    /* ====== STOCK: AGOTADO (NUEVO) ====== */
+    /* ====== STOCK: AGOTADO ====== */
     .badge-agotado{
         position:absolute;
         top: 10px;
