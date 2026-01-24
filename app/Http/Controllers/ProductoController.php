@@ -16,7 +16,6 @@ class ProductoController extends Controller
         $all = config('mensajes', []);
         return $all[$key] ?? $key;
     }
-
     private function viewWithMsgs(string $view, array $data = [])
     {
         $data['msg'] = config('mensajes', []);
@@ -24,7 +23,7 @@ class ProductoController extends Controller
     }
 
     /**
-     * ✅ Seed de mezcla estable por sesión (NUEVO)
+     * Seed de mezcla estable por sesión (NUEVO)
      */
     private function mixSeed(Request $request): string
     {

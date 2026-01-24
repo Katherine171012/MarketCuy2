@@ -1,5 +1,5 @@
 <div class="shop-side">
-    {{-- BUSCAR GLOBAL (SERVER) --}}
+    {{-- BUSCAR GLOBAL --}}
     <div class="mb-3">
         <div class="side-title">Buscar</div>
 

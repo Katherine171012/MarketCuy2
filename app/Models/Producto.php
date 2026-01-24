@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\UnidadMedida;
 use App\Models\Categoria;
 use Illuminate\Support\Facades\DB;
-
+/* ====== Producto ====== */
 class Producto extends Model
 {
     protected $table = 'productos';
