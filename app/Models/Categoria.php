@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Categoria extends Model
 {
@@ -19,18 +20,31 @@ class Categoria extends Model
         'estado_cat',
     ];
 
+    /**
+     * Invalidar cache automáticamente cuando se guarda una categoría
+     */
+    protected static function booted()
+    {
+        static::saved(function () {
+            Cache::forget('home_categorias_8');
+        });
+    }
+
     public static function listarActivas()
     {
         return self::where('estado_cat', 'ACT')
             ->orderBy('cat_nombre', 'ASC')
             ->get();
     }
+
     public static function obtenerParaHome(int $limite = 8)
     {
-        return self::where('estado_cat', 'ACT')
-            ->orderBy('id_categoria', 'asc') // O por nombre
-            ->limit($limite)
-            ->get();
+        return Cache::remember("home_categorias_{$limite}", 3600, function () use ($limite) {
+            return self::where('estado_cat', 'ACT')
+                ->orderBy('id_categoria', 'asc')
+                ->limit($limite)
+                ->get();
+        });
     }
 }
 

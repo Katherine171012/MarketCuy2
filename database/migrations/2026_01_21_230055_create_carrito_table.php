@@ -4,11 +4,10 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up()
     {
-        Schema::connection('pgsql_cloud')->create('carrito', function (Blueprint $table) {
+        Schema::create('carrito', function (Blueprint $table) {
             $table->id();
 
             // 1. id_user debe ser entero para coincidir con el 'serial' de la tabla users
@@ -30,6 +29,6 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::connection('pgsql_cloud')->dropIfExists('carrito');
+        Schema::dropIfExists('carrito');
     }
 };
