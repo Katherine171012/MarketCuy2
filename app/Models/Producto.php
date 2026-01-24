@@ -6,12 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\UnidadMedida;
 use App\Models\Categoria;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 
 class Producto extends Model
 {
-    protected $connection = 'pgsql';
-
     protected $table = 'productos';
     protected $primaryKey = 'id_producto';
     public $incrementing = false;
@@ -40,55 +37,42 @@ class Producto extends Model
         'pro_imagen',
     ];
 
-    /**
-     * Invalidar cache automáticamente cuando se guarda un producto
-     */
-    protected static function booted()
+    public function enStock(): bool
     {
-        static::saved(function () {
-            Cache::forget('ofertas_limite_6');
-            Cache::forget('destacados_limite_4');
-            Cache::forget('home_categorias_8');
-        });
+        return ((int)($this->pro_saldo_final ?? 0)) > 0;
     }
 
-    // ✅ Promo/Oferta (si el trigger guardó un precio anterior mayor)
     public function tieneDescuento(): bool
     {
         return $this->pro_precio_antes !== null
             && $this->pro_precio_antes > $this->pro_precio_venta;
     }
 
-    // ✅ Etiqueta visible para el usuario (si no hay, usamos "Oferta")
     public function etiquetaPromo(): string
     {
         $t = trim((string) ($this->pro_etiqueta ?? ''));
         return $t !== '' ? $t : 'Oferta';
     }
 
-    // ✅ Para mostrar “Ofertas” en la sección productos
     public static function obtenerOfertas(int $limite = 6)
     {
-        return Cache::remember("ofertas_limite_{$limite}", 1800, function () use ($limite) {
-            return self::where('estado_prod', 'ACT')
-                ->whereNotNull('pro_precio_antes')
-                ->whereColumn('pro_precio_antes', '>', 'pro_precio_venta')
-                ->with('categoria')
-                ->orderBy('pro_nombre', 'asc')
-                ->limit($limite)
-                ->get();
-        });
+        return self::where('estado_prod', 'ACT')
+            ->whereRaw('COALESCE(pro_saldo_final, 0) > 0')
+            ->whereNotNull('pro_precio_antes')
+            ->whereColumn('pro_precio_antes', '>', 'pro_precio_venta')
+            ->with('categoria')
+            ->orderBy('pro_nombre', 'asc')
+            ->limit($limite)
+            ->get();
     }
 
     public static function obtenerDestacados(int $limite = 4)
     {
-        return Cache::remember("destacados_limite_{$limite}", 1800, function () use ($limite) {
-            return self::where('estado_prod', 'ACT')
-                ->where('pro_es_destacado', true)
-                ->orderBy('pro_nombre', 'asc')
-                ->limit($limite)
-                ->get();
-        });
+        return self::where('estado_prod', 'ACT')
+            ->where('pro_es_destacado', true)
+            ->orderBy('pro_nombre', 'asc')
+            ->limit($limite)
+            ->get();
     }
 
     public function unidadCompra()
@@ -133,16 +117,27 @@ class Producto extends Model
             ->with('categoria');
     }
 
-    public static function obtenerParaLista(int $porPagina = 10)
+    private static function aplicarOrdenMix($query, string $seed)
     {
-        return self::query()
+        return $query->orderByRaw("md5(id_producto || ?)", [$seed]);
+    }
+
+    public static function obtenerParaLista(int $porPagina = 10, ?string $seed = null)
+    {
+        $q = self::query()
             ->with('categoria')
             ->orderByRaw("CASE
                 WHEN estado_prod = 'ACT' THEN 1
                 WHEN estado_prod = 'INA' THEN 2
-                ELSE 3 END")
-            ->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) ASC")
-            ->paginate($porPagina);
+                ELSE 3 END");
+
+        if ($seed) {
+            self::aplicarOrdenMix($q, $seed);
+        } else {
+            $q->orderByRaw("RANDOM()");
+        }
+
+        return $q->paginate($porPagina);
     }
 
     public static function paginarActivos(int $perPage = 10)
@@ -154,8 +149,7 @@ class Producto extends Model
 
     public static function buscarPorId(?string $id): ?self
     {
-        if (!$id)
-            return null;
+        if (!$id) return null;
 
         return self::with(['categoria', 'unidadCompra', 'unidadVenta'])->find($id);
     }
@@ -165,7 +159,8 @@ class Producto extends Model
         ?string $idCategoria,
         ?string $unidad,
         ?string $q,
-        int $perPage = 10
+        int $perPage = 10,
+        ?string $seed = null
     ) {
         $query = self::queryActivos();
 
@@ -175,28 +170,40 @@ class Producto extends Model
         }
 
         if ($idCategoria !== null && $idCategoria !== '') {
-            $query->where('id_categoria', (int) $idCategoria);
+            $query->where('id_categoria', (int)$idCategoria);
         }
 
         if ($unidad !== null && $unidad !== '') {
             $query->where('pro_um_compra', $unidad);
         }
 
-        $orden = ($orden !== null && $orden !== '') ? $orden : 'id_asc';
+        $orden = ($orden !== null && $orden !== '') ? $orden : 'mix';
 
         switch ($orden) {
+            case 'mix':
+                if ($seed) {
+                    self::aplicarOrdenMix($query, $seed);
+                } else {
+                    $query->orderByRaw("RANDOM()");
+                }
+                break;
+
             case 'id_asc':
                 $query->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) ASC");
                 break;
+
             case 'id_desc':
                 $query->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) DESC");
                 break;
+
             case 'nombre_az':
                 $query->orderBy('pro_nombre', 'ASC');
                 break;
+
             case 'nombre_za':
                 $query->orderBy('pro_nombre', 'DESC');
                 break;
+
             default:
                 return null;
         }
@@ -240,50 +247,50 @@ class Producto extends Model
         $idProducto = $data['id_producto'] ?? self::generarSiguienteId();
 
         return self::create([
-            'id_producto' => $idProducto,
-            'pro_nombre' => $data['pro_nombre'],
-            'pro_descripcion' => $data['pro_descripcion'] ?? null,
+            'id_producto'       => $idProducto,
+            'pro_nombre'        => $data['pro_nombre'],
+            'pro_descripcion'   => $data['pro_descripcion'] ?? null,
 
-            'pro_um_compra' => $data['unidad_medida'],
-            'pro_um_venta' => $data['unidad_medida'],
+            'pro_um_compra'     => $data['unidad_medida'],
+            'pro_um_venta'      => $data['unidad_medida'],
 
-            'pro_valor_compra' => $data['pro_valor_compra'] ?? 0,
-            'pro_precio_venta' => $data['pro_precio_venta'],
-            'pro_precio_antes' => $data['pro_precio_antes'] ?? null,
+            'pro_valor_compra'  => $data['pro_valor_compra'] ?? 0,
+            'pro_precio_venta'  => $data['pro_precio_venta'],
+            'pro_precio_antes'  => $data['pro_precio_antes'] ?? null,
 
             'pro_saldo_inicial' => $data['pro_saldo_inicial'],
 
-            'pro_qty_ingresos' => 0,
-            'pro_qty_egresos' => 0,
-            'pro_qty_ajustes' => 0,
+            'pro_qty_ingresos'  => 0,
+            'pro_qty_egresos'   => 0,
+            'pro_qty_ajustes'   => 0,
 
-            'pro_saldo_final' => $data['pro_saldo_inicial'],
-            'estado_prod' => 'ACT',
+            'pro_saldo_final'   => $data['pro_saldo_inicial'],
+            'estado_prod'       => 'ACT',
 
-            'id_categoria' => (int) $data['id_categoria'],
+            'id_categoria'      => (int) $data['id_categoria'],
 
-            'pro_etiqueta' => $data['pro_etiqueta'] ?? null,
-            'pro_es_destacado' => $data['pro_es_destacado'] ?? false,
-            'pro_clicks_count' => $data['pro_clicks_count'] ?? 0,
+            'pro_etiqueta'      => $data['pro_etiqueta'] ?? null,
+            'pro_es_destacado'  => $data['pro_es_destacado'] ?? false,
+            'pro_clicks_count'  => $data['pro_clicks_count'] ?? 0,
 
-            'pro_imagen' => $data['pro_imagen'] ?? null,
+            'pro_imagen'        => $data['pro_imagen'] ?? null,
         ]);
     }
 
     public function actualizarProducto(array $data)
     {
         return $this->update([
-            'pro_valor_compra' => $data['pro_valor_compra'] ?? $this->pro_valor_compra,
-            'pro_precio_venta' => $data['pro_precio_venta'],
-            'pro_precio_antes' => $data['pro_precio_antes'] ?? $this->pro_precio_antes,
+            'pro_valor_compra'  => $data['pro_valor_compra'] ?? $this->pro_valor_compra,
+            'pro_precio_venta'  => $data['pro_precio_venta'],
+            'pro_precio_antes'  => $data['pro_precio_antes'] ?? $this->pro_precio_antes,
 
             'pro_saldo_inicial' => (int) $data['pro_saldo_inicial'],
-            'pro_qty_ingresos' => (int) $data['pro_qty_ingresos'],
-            'pro_qty_egresos' => (int) $data['pro_qty_egresos'],
-            'pro_qty_ajustes' => (int) $data['pro_qty_ajustes'],
-            'pro_saldo_final' => (int) $data['pro_saldo_final'],
+            'pro_qty_ingresos'  => (int) $data['pro_qty_ingresos'],
+            'pro_qty_egresos'   => (int) $data['pro_qty_egresos'],
+            'pro_qty_ajustes'   => (int) $data['pro_qty_ajustes'],
+            'pro_saldo_final'   => (int) $data['pro_saldo_final'],
 
-            'id_categoria' => isset($data['id_categoria']) ? (int) $data['id_categoria'] : $this->id_categoria,
+            'id_categoria'      => isset($data['id_categoria']) ? (int)$data['id_categoria'] : $this->id_categoria,
         ]);
     }
 
