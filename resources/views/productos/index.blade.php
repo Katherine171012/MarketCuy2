@@ -139,7 +139,7 @@
 
                 const btnAdd = document.getElementById('btnAddCarrito');
                 if(btnAdd){
-                    btnAdd.addEventListener('click', () => {
+                    btnAdd.addEventListener('click', async () => {
                         if(!enStock) return;
 
                         const token = localStorage.getItem('auth_token');
@@ -150,48 +150,61 @@
                             return;
                         }
 
-                        const counterEl = document.getElementById('cartCounter');
-                        if(counterEl) {
-                            let current = parseInt(counterEl.innerText || 0);
-                            let nuevoTotal = current + cantidadActual;
-                            counterEl.innerText = nuevoTotal;
-                            localStorage.setItem('cart_count_cache', nuevoTotal);
-                        }
-
+                        // Deshabilitar botón temporalmente
                         const btnTextOriginal = btnAdd.innerHTML;
-                        btnAdd.innerHTML = '<i class="fa-solid fa-check"></i> ¡Agregado!';
-                        btnAdd.classList.remove('btn-concho');
-                        btnAdd.classList.add('btn-success');
+                        btnAdd.disabled = true;
+                        btnAdd.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Agregando...';
 
-                        setTimeout(() => {
-                            btnAdd.innerHTML = btnTextOriginal;
-                            btnAdd.classList.remove('btn-success');
-                            btnAdd.classList.add('btn-concho');
-                        }, 2000);
-
-                        fetch('/api/cart-add', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify({
-                                id_producto: btnAdd.getAttribute('data-id').trim(),
-                                nombre: btnAdd.getAttribute('data-nombre'),
-                                precio: btnAdd.getAttribute('data-precio'),
-                                cantidad: cantidadActual,
-                                imagen: "{{ !empty($productoVer->pro_imagen) ? asset('images/' . $productoVer->pro_imagen) : 'https://placehold.co/100' }}"
-                            })
-                        })
-                            .then(response => {
-                                if (!response.ok) {
-                                    alert("Hubo un error guardando en el carrito. Por favor intenta de nuevo.");
-                                    if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual;
-                                }
-                            })
-                            .catch(() => {
-                                if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual;
+                        try {
+                            const response = await fetch('/api/carrito/agregar', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`,
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    id_producto: btnAdd.getAttribute('data-id').trim(),
+                                    cantidad: cantidadActual
+                                })
                             });
+
+                            const data = await response.json();
+
+                            if (response.ok) {
+                                // Actualizar contador del navbar
+                                const counterEl = document.getElementById('cartCounter');
+                                if(counterEl) {
+                                    let current = parseInt(counterEl.innerText || 0);
+                                    let nuevoTotal = current + cantidadActual;
+                                    counterEl.innerText = nuevoTotal;
+                                    counterEl.style.display = nuevoTotal > 0 ? 'block' : 'none';
+                                    localStorage.setItem('cart_count_cache', nuevoTotal);
+                                }
+
+                                // Mostrar éxito
+                                btnAdd.innerHTML = '<i class="fa-solid fa-check"></i> ¡Agregado!';
+                                btnAdd.classList.remove('btn-concho');
+                                btnAdd.classList.add('btn-success');
+
+                                setTimeout(() => {
+                                    btnAdd.innerHTML = btnTextOriginal;
+                                    btnAdd.classList.remove('btn-success');
+                                    btnAdd.classList.add('btn-concho');
+                                    btnAdd.disabled = false;
+                                }, 2000);
+                            } else {
+                                // Mostrar error del servidor
+                                alert(data.error || "No se pudo agregar el producto al carrito");
+                                btnAdd.innerHTML = btnTextOriginal;
+                                btnAdd.disabled = false;
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert("Error de conexión. Por favor intenta de nuevo.");
+                            btnAdd.innerHTML = btnTextOriginal;
+                            btnAdd.disabled = false;
+                        }
                     });
                 }
             })();

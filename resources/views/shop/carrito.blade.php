@@ -46,14 +46,21 @@
                                 <div class="col-6 col-md-3 text-center mt-3 mt-md-0">
                                     <div class="btn-group btn-group-sm shadow-sm">
                                         <button class="btn btn-white border"
-                                            @click="changeQty(item.producto.id_producto, -1)">
+                                            @click="changeQty(item.producto.id_producto, -1)"
+                                            :disabled="updatingItems[item.producto.id_producto] || false">
                                             <i class="fa-solid fa-minus text-muted"></i>
                                         </button>
                                         <span
-                                            class="px-3 py-1 bg-white border-top border-bottom d-flex align-items-center justify-content-center fw-bold"
-                                            style="min-width: 45px;" x-text="item.cantidad"></span>
+                                            class="px-3 py-1 bg-white border-top border-bottom d-flex align-items-center justify-content-center fw-bold position-relative"
+                                            style="min-width: 45px;">
+                                            <span x-show="!updatingItems[item.producto.id_producto]"
+                                                x-text="item.cantidad"></span>
+                                            <i x-show="updatingItems[item.producto.id_producto]"
+                                                class="fa-solid fa-spinner fa-spin text-danger"></i>
+                                        </span>
                                         <button class="btn btn-white border"
-                                            @click="changeQty(item.producto.id_producto, 1)">
+                                            @click="changeQty(item.producto.id_producto, 1)"
+                                            :disabled="updatingItems[item.producto.id_producto] || false">
                                             <i class="fa-solid fa-plus text-muted"></i>
                                         </button>
                                     </div>
@@ -65,7 +72,7 @@
                                         x-text="'$' + (item.cantidad * parseFloat(item.producto.pro_precio_venta)).toFixed(2)">
                                     </div>
                                     <button class="btn btn-link text-muted p-0 mt-1 hover-danger"
-                                        @click="deleteItem(item.id)">
+                                        @click="confirmarEliminar(item.id, item.producto.pro_nombre)">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 </div>
@@ -103,11 +110,52 @@
                         Finalizar Compra
                     </button>
 
-                    <button @click="vaciarCarrito()" class="btn btn-link btn-sm text-muted w-100 mt-2"
+                    <button @click="confirmarVaciar()" class="btn btn-link btn-sm text-muted w-100 mt-2"
                         :disabled="items.length === 0">
                         Vaciar carrito
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL DE CONFIRMACIÓN ELEGANTE --}}
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <div class="w-100 text-center">
+                        <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex p-3 mb-2">
+                            <i class="fa-solid fa-exclamation-triangle fa-2x text-danger"></i>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center px-4">
+                    <h5 class="fw-bold mb-2" id="confirmTitle">¿Estás seguro?</h5>
+                    <p class="text-muted mb-4" id="confirmMessage"></p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-danger" id="confirmBtn">
+                            <i class="fa-solid fa-check me-2"></i>Sí, continuar
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- CONTENEDOR DE TOASTS --}}
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="toastNotification" class="toast align-items-center border-0 shadow-lg" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold">
+                    <i class="me-2"></i>
+                    <span id="toastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
     </div>
@@ -117,6 +165,7 @@
             return {
                 items: [],
                 loading: true,
+                updatingItems: {}, // 🔒 Track de items en proceso
                 IVA_RATE: 0.15,
 
                 // ✅ Computed properties (recalcula automáticamente)
@@ -163,11 +212,19 @@
                 },
 
                 async changeQty(idProducto, cambio) {
+                    // 🔒 Prevenir clics múltiples
+                    if (this.updatingItems[idProducto]) {
+                        return; // Ya hay una actualización en proceso
+                    }
+
                     const item = this.items.find(i => i.producto.id_producto === idProducto);
                     if (!item) return;
 
                     const nuevaCantidad = item.cantidad + cambio;
                     if (nuevaCantidad < 1) return;
+
+                    // Marcar como en proceso
+                    this.updatingItems[idProducto] = true;
 
                     // ✅ Actualización optimista (Alpine reactivity)
                     const cantidadOriginal = item.cantidad;
@@ -187,26 +244,52 @@
                             })
                         });
 
+                        const data = await response.json();
+
                         if (!response.ok) {
                             // Revertir si falla
                             item.cantidad = cantidadOriginal;
-                            const data = await response.json();
-                            alert(data.error || "Error al actualizar");
+                            this.mostrarToast(data.error || "Error al actualizar", 'error');
                         } else {
                             this.actualizarContadorNav();
+                            // Solo mostrar toast cada 3 clicks para no saturar
+                            if (Math.abs(cambio) === 1 && Math.random() > 0.7) {
+                                this.mostrarToast(data.message || 'Actualizado', 'success');
+                            }
                         }
                     } catch (error) {
                         console.error(error);
                         item.cantidad = cantidadOriginal; // Revertir
+                        this.mostrarToast('Error de conexión', 'error');
+                    } finally {
+                        // Liberar el lock después de un pequeño delay
+                        setTimeout(() => {
+                            delete this.updatingItems[idProducto];
+                        }, 300);
                     }
                 },
 
-                async deleteItem(idCarrito) {
-                    if (!confirm("¿Deseas quitar este producto de tu carrito?")) return;
+                confirmarEliminar(idCarrito, nombreProducto) {
+                    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+                    document.getElementById('confirmTitle').innerText = '¿Quitar producto?';
+                    document.getElementById('confirmMessage').innerText = `¿Deseas eliminar "${nombreProducto}" de tu carrito?`;
 
+                    const confirmBtn = document.getElementById('confirmBtn');
+                    confirmBtn.onclick = async () => {
+                        modal.hide();
+                        await this.deleteItem(idCarrito);
+                    };
+
+                    modal.show();
+                },
+
+                async deleteItem(idCarrito) {
                     // ✅ Eliminación optimista
                     const itemIndex = this.items.findIndex(i => i.id === idCarrito);
-                    if (itemIndex === -1) return;
+                    if (itemIndex === -1) {
+                        console.error('Item no encontrado:', idCarrito);
+                        return;
+                    }
 
                     const itemBackup = this.items[itemIndex];
                     this.items.splice(itemIndex, 1);
@@ -220,23 +303,43 @@
                             }
                         });
 
+                        const data = await response.json();
+
                         if (!response.ok) {
                             // Restaurar si falla
+                            console.error('Error del servidor:', data);
                             this.items.splice(itemIndex, 0, itemBackup);
+                            this.mostrarToast(data.error || 'Error al eliminar', 'error');
                         } else {
                             this.actualizarContadorNav();
+                            this.mostrarToast(data.message || 'Producto eliminado', 'success');
                         }
                     } catch (error) {
-                        console.error(error);
+                        console.error('Error en deleteItem:', error);
                         this.items.splice(itemIndex, 0, itemBackup);
+                        this.mostrarToast('Error de conexión', 'error');
                     }
                 },
 
-                async vaciarCarrito() {
-                    if (!confirm("¿Estás seguro de que quieres vaciar todo el carrito?")) return;
+                confirmarVaciar() {
+                    if (this.items.length === 0) return;
 
+                    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+                    document.getElementById('confirmTitle').innerText = '¿Vaciar carrito?';
+                    document.getElementById('confirmMessage').innerText = '¿Estás seguro de vaciar todo tu carrito? Esta acción no se puede deshacer.';
+
+                    const confirmBtn = document.getElementById('confirmBtn');
+                    confirmBtn.onclick = async () => {
+                        modal.hide();
+                        await this.vaciarCarrito();
+                    };
+
+                    modal.show();
+                },
+
+                async vaciarCarrito() {
                     try {
-                        await fetch('/api/carrito/vaciar', {
+                        const response = await fetch('/api/carrito/vaciar', {
                             method: 'DELETE',
                             headers: {
                                 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -244,10 +347,18 @@
                             }
                         });
 
-                        this.items = [];
-                        this.actualizarContadorNav();
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            this.items = [];
+                            this.actualizarContadorNav();
+                            this.mostrarToast(data.message || 'Carrito vaciado', 'success');
+                        } else {
+                            this.mostrarToast(data.error || 'Error al vaciar', 'error');
+                        }
                     } catch (error) {
                         console.error(error);
+                        this.mostrarToast('Error de conexión', 'error');
                     }
                 },
 
@@ -263,6 +374,31 @@
                         contador.style.display = total > 0 ? 'block' : 'none';
                         localStorage.setItem('cart_count_cache', total);
                     }
+                },
+
+                mostrarToast(mensaje, tipo = 'success') {
+                    const toastEl = document.getElementById('toastNotification');
+                    const toastBody = toastEl.querySelector('.toast-body');
+                    const icon = toastBody.querySelector('i');
+                    const messageSpan = document.getElementById('toastMessage');
+
+                    // Configurar colores y icono según tipo
+                    if (tipo === 'success') {
+                        toastEl.className = 'toast align-items-center border-0 shadow-lg bg-success text-white';
+                        icon.className = 'fa-solid fa-circle-check me-2';
+                    } else {
+                        toastEl.className = 'toast align-items-center border-0 shadow-lg bg-danger text-white';
+                        icon.className = 'fa-solid fa-circle-xmark me-2';
+                    }
+
+                    messageSpan.innerText = mensaje;
+
+                    const toast = new bootstrap.Toast(toastEl, {
+                        autohide: true,
+                        delay: 3000
+                    });
+
+                    toast.show();
                 }
             }
         }
@@ -284,6 +420,26 @@
 
         .btn-white:hover {
             background: #f8f9fa;
+        }
+
+        /* Animaciones del modal */
+        .modal.fade .modal-dialog {
+            transition: transform 0.3s ease-out;
+            transform: scale(0.8);
+        }
+
+        .modal.show .modal-dialog {
+            transform: scale(1);
+        }
+
+        /* Toast elegante */
+        .toast {
+            min-width: 300px;
+            border-radius: 0.5rem;
+        }
+
+        .toast-body {
+            padding: 1rem 1.25rem;
         }
     </style>
 @endsection
