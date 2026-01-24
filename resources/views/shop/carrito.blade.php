@@ -311,7 +311,7 @@
                                 // Forzar recarga del carrito para asegurar consistencia real
                                 await this.fetchCart();
                             }
-                            this.mostrarToast(data.error || "Error de sincronización", 'error');
+                            this.mostrarToast(data.error || "Stock insuficiente", 'error');
                         } else {
                             // Éxito silencioso (o toast muy sutil, pero el usuario pidió "instantáneo")
                             // Opcional: console.log('Sincronizado');
