@@ -56,10 +56,9 @@
                     <label>Correo Electrónico * </label>
                     <div class="input-group has-validation">
                         <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
-                        <!-- El evento oninput llamará a la función que está en el archivo JS externo -->
                         <input type="email" id="email" class="form-control" placeholder="correo@ejemplo.com" required oninput="validarEmail()">
                         <div id="emailFeedback" class="invalid-feedback">
-                            El correo debe tener un @ y una extensión válida (ej: .com).
+                            El correo debe tener un @ y una extensión válida.
                         </div>
                     </div>
                 </div>
@@ -68,7 +67,7 @@
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa-solid fa-city"></i></span>
                         <select id="id_ciudad" class="form-select" required>
-                            <option value="" selected disabled>Cargando ciudades</option>
+                            <option value="" selected disabled>Ciudades</option>
                         </select>
                     </div>
                 </div>
@@ -98,11 +97,29 @@
                 </div>
             </div>
 
-            <div class="mb-4">
+            <!-- Contraseña -->
+            <div class="mb-3">
                 <label>Contraseña *</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
-                    <input type="password" id="password" class="form-control" placeholder="Mínimo 8 caracteres" required>
+                    <!-- Agregamos onkeyup para validar fuerza en tiempo real -->
+                    <input type="password" id="password" class="form-control" placeholder="Mínimo 8 caracteres" required onkeyup="validarPassword()">
+                </div>
+                <!-- Barra de fuerza -->
+                <div class="progress mt-1" style="height: 5px;">
+                    <div id="passwordStrength" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <small id="passwordHelp" class="text-muted" style="font-size: 0.75rem;">Debe tener números y mayúsculas.</small>
+            </div>
+            <div class="mb-4">
+                <label>Confirmar Contraseña *</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                    <!-- Agregamos onkeyup para verificar coincidencia -->
+                    <input type="password" id="password_confirmation" class="form-control" placeholder="Repite tu contraseña" required onkeyup="validarCoincidencia()">
+                    <div id="matchFeedback" class="invalid-feedback">
+                        Las contraseñas no coinciden.
+                    </div>
                 </div>
             </div>
 

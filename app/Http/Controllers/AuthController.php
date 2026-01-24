@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
@@ -37,7 +38,17 @@ class AuthController extends Controller
             'direccion'      => 'nullable|string',
             'telefono'       => 'nullable|string',
             'celular'        => 'nullable|string',
-            'password'       => 'required|string|min:8',
+            // CAMBIO EN PASSWORD:
+            'password' => [
+                'required',
+                'string',
+                'confirmed', // <--- Esto busca automáticamente un campo llamado 'password_confirmation'
+                Password::min(8) // Mínimo 8
+                ->letters()  // Debe tener letras
+                ->numbers()  // Debe tener números
+                ->mixedCase() // Opcional: Mayúsculas y minúsculas
+                ->symbols()   // Opcional: Símbolos
+            ],
             // VALIDACIÓN DEL EMAIL
             'email'          => [
                 'required',
