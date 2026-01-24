@@ -33,7 +33,7 @@
                 <div class="col-lg-6">
                     @if(!empty($productoVer->pro_imagen))
                         <img class="detail-img rounded-4"
-                             src="{{ asset('storage/' . $productoVer->pro_imagen) }}"
+                             src="{{ asset('images/' . $productoVer->pro_imagen) }}"
                              alt="Imagen {{ $productoVer->pro_nombre }}">
                     @else
                         <div class="detail-img rounded-4 d-flex align-items-center justify-content-center text-muted">
@@ -180,7 +180,7 @@
                                 nombre: btnAdd.getAttribute('data-nombre'),
                                 precio: btnAdd.getAttribute('data-precio'),
                                 cantidad: cantidadActual,
-                                imagen: "{{ !empty($productoVer->pro_imagen) ? asset('storage/' . $productoVer->pro_imagen) : 'https://placehold.co/100' }}"
+                                imagen: "{{ !empty($productoVer->pro_imagen) ? asset('images/' . $productoVer->pro_imagen) : 'https://placehold.co/100' }}"
                             })
                         })
                             .then(response => {
@@ -238,7 +238,7 @@
                             <div class="row g-3">
                                 @foreach($ofertas as $o)
                                     @php
-                                        $img = !empty($o->pro_imagen) ? asset('storage/' . $o->pro_imagen) : 'https://placehold.co/600x450';
+                                        $img = !empty($o->pro_imagen) ? asset('images/' . $o->pro_imagen) : 'https://placehold.co/600x450';
                                         $catO = $o->categoria?->cat_nombre ?? 'Sin categoría';
                                     @endphp
                                     <div class="col-12 col-md-6 col-lg-4">
@@ -287,7 +287,7 @@
                     <div class="row g-3" id="gridProductos">
                         @foreach($productos as $p)
                             @php
-                                $img = !empty($p->pro_imagen) ? asset('storage/' . $p->pro_imagen) : 'https://placehold.co/600x450';
+                                $img = !empty($p->pro_imagen) ? asset('images/' . $p->pro_imagen) : 'https://placehold.co/600x450';
                                 $cat = $p->categoria?->cat_nombre ?? 'Sin categoría';
                                 $enStock = ((int)($p->pro_saldo_final ?? 0)) > 0;
                             @endphp
