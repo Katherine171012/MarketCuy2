@@ -78,7 +78,8 @@
                                 ${{ number_format((float) $productoVer->pro_precio_venta, 2) }}
                             </div>
 
-                            <div class="small text-muted mt-1">
+                            <!-- Stock oculto -->
+                            <div class="d-none">
                                 Stock: <span class="fw-bold">{{ (int)($productoVer->pro_saldo_final ?? 0) }}</span>
                             </div>
                         </div>
@@ -165,7 +166,7 @@
                         
                         // Validación bonita de stock excedido
                         if(cantidadActual > stockMax) {
-                            const msg = `Solo quedan ${stockMax} unidades disponibles`;
+                            const msg = `No hay suficientes unidades para la cantidad solicitada`;
                             
                             // Función helper para toast si no existe
                             const showToast = (message, type = 'danger') => {
@@ -423,7 +424,7 @@
 
             </div>
         </div>
-        /* ====== funcion ====== */
+        <!-- Scripts de funcionalidad -->
         <script>
             (function(){
                 const range = document.getElementById('rangePrecio');
