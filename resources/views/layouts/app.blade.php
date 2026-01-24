@@ -10,6 +10,7 @@
 
     {{-- CSS GLOBAL (para todo: home, productos, contacto, etc.) --}}
     <link rel="stylesheet" href="{{ asset('css/productos.css') }}">
+    @yield('styles')
 </head>
 
 @php

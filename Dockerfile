@@ -30,6 +30,8 @@ RUN cp .env.example .env
 # Instalar dependencias Laravel
 RUN composer install --no-dev --optimize-autoloader
 
+RUN php artisan storage:link
+
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
