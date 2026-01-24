@@ -1,6 +1,6 @@
 FROM php:8.4-fpm
 
-# Instalar dependencias del sistema necesarias
+# Instalar dependencias del sistema (Solo PHP y Nginx)
 RUN apt-get update && apt-get install -y \
     nginx \
     git \
@@ -12,29 +12,22 @@ RUN apt-get update && apt-get install -y \
     zip \
     curl \
     && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
+
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Configuración de Nginx
 COPY ./docker/nginx.conf /etc/nginx/nginx.conf
 
-# Directorio de trabajo
 WORKDIR /var/www/html
-
-# Copiar proyecto
 COPY . .
 
-# Crear .env
-RUN cp .env.example .env
-
-# Instalar dependencias Laravel
+# Instalar dependencias de PHP
 RUN composer install --no-dev --optimize-autoloader
 
-RUN php artisan storage:link
-
-RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
-
+# Permisos
+RUN chown -R www-data:www-data storage bootstrap/cache public \
+    && chmod -R 775 storage bootstrap/cache public
 
 EXPOSE 80
 
