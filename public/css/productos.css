@@ -1173,4 +1173,23 @@ body.scrolled .hero-contacto {
     .nosotros-hero .display-4{
         -webkit-text-stroke: 1px rgba(0,0,0,.35);
     }
+    /* ====== STOCK: AGOTADO (NUEVO) ====== */
+    .badge-agotado{
+        position:absolute;
+        top: 10px;
+        left: 10px;
+        background: #6c757d;
+        color:#fff;
+        font-size: 0.75rem;
+        font-weight: 800;
+        padding: 5px 10px;
+        border-radius: 6px;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .product-btn.disabled{
+        pointer-events: none;
+        opacity: .65;
+    }
 }

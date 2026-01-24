@@ -4,7 +4,6 @@
 
 @section('contenido')
 
-    {{-- ERRORES --}}
     @if($errors->any())
         <div class="alert alert-danger alert-soft">
             <ul class="mb-0">
@@ -15,7 +14,6 @@
         </div>
     @endif
 
-    {{-- MODO DETALLE (cuando viene ?view=ID) --}}
     @if(isset($productoVer) && $productoVer)
 
         <div class="d-flex align-items-center gap-2 mb-3">
@@ -27,6 +25,7 @@
         @php
             $cat = $productoVer->categoria?->cat_nombre ?? 'Sin categoría';
             $desc = $productoVer->pro_descripcion ?? null;
+            $enStock = ((int)($productoVer->pro_saldo_final ?? 0)) > 0;
         @endphp
 
         <div class="detail-card p-4">
@@ -46,9 +45,12 @@
                 <div class="col-lg-6">
                     <span class="badge-cat">{{ $cat }}</span>
 
-                    {{-- ✅ ETIQUETA DE OFERTA (si aplica) --}}
                     @if($productoVer->tieneDescuento())
                         <span class="badge-oferta ms-2">{{ $productoVer->etiquetaPromo() }}</span>
+                    @endif
+
+                    @if(!$enStock)
+                        <span class="badge-agotado ms-2">Agotado</span>
                     @endif
 
                     <div class="detail-title">{{ $productoVer->pro_nombre }}</div>
@@ -75,14 +77,19 @@
                             <div class="display-6 fw-bold mb-0">
                                 ${{ number_format((float) $productoVer->pro_precio_venta, 2) }}
                             </div>
+
+                            <div class="small text-muted mt-1">
+                                Stock: <span class="fw-bold">{{ (int)($productoVer->pro_saldo_final ?? 0) }}</span>
+                            </div>
                         </div>
 
                         <div class="d-flex align-items-center gap-2">
-                            <button class="btn btn-outline-secondary" id="btnMinus">-</button>
-                            <input id="txtQty" type="text" class="form-control text-center" value="1" style="width:60px;">
-                            <button class="btn btn-outline-secondary" id="btnPlus">+</button>
+                            <button class="btn btn-outline-secondary" id="btnMinus" {{ !$enStock ? 'disabled' : '' }}>-</button>
+                            <input id="txtQty" type="text" class="form-control text-center" value="1" style="width:60px;" {{ !$enStock ? 'disabled' : '' }}>
+                            <button class="btn btn-outline-secondary" id="btnPlus" {{ !$enStock ? 'disabled' : '' }}>+</button>
                         </div>
                     </div>
+
                     <div class="row g-2 mt-3">
                         <div class="col-12">
                             <div class="pill">
@@ -99,8 +106,10 @@
                                 id="btnAddCarrito"
                                 data-id="{{ $productoVer->id_producto }}"
                                 data-nombre="{{ $productoVer->pro_nombre }}"
-                                data-precio="{{ $productoVer->pro_precio_venta }}">
-                            <i class="fa-solid fa-cart-plus me-2"></i> Agregar al carrito
+                                data-precio="{{ $productoVer->pro_precio_venta }}"
+                            {{ !$enStock ? 'disabled' : '' }}>
+                            <i class="fa-solid fa-cart-plus me-2"></i>
+                            {{ !$enStock ? 'No disponible' : 'Agregar al carrito' }}
                         </button>
                     </div>
                 </div>
@@ -109,24 +118,30 @@
 
         <script>
             (function(){
-                // --- QTY simple (no cambia lógica del sistema) ---
+                const enStock = {{ $enStock ? 'true' : 'false' }};
+
                 const minus = document.getElementById('btnMinus');
                 const plus  = document.getElementById('btnPlus');
                 const qty   = document.getElementById('txtQty');
+
                 function clamp(){
                     let n = parseInt(qty.value || '1', 10);
                     if(isNaN(n) || n < 1) n = 1;
                     qty.value = n;
                     return n;
                 }
-                if(minus) minus.addEventListener('click', () => { clamp(); qty.value = Math.max(1, parseInt(qty.value,10)-1); });
-                if(plus)  plus.addEventListener('click',  () => { clamp(); qty.value = parseInt(qty.value,10)+1; });
-                if(qty)   qty.addEventListener('input', clamp);
 
-                // --- ADD carrito (tu lógica existente) ---
+                if(enStock){
+                    if(minus) minus.addEventListener('click', () => { clamp(); qty.value = Math.max(1, parseInt(qty.value,10)-1); });
+                    if(plus)  plus.addEventListener('click',  () => { clamp(); qty.value = parseInt(qty.value,10)+1; });
+                    if(qty)   qty.addEventListener('input', clamp);
+                }
+
                 const btnAdd = document.getElementById('btnAddCarrito');
                 if(btnAdd){
                     btnAdd.addEventListener('click', () => {
+                        if(!enStock) return;
+
                         const token = localStorage.getItem('auth_token');
                         const cantidadActual = clamp();
 
@@ -135,43 +150,49 @@
                             return;
                         }
 
-                        // UI: Cambiar botón a "Agregado"
+                        const counterEl = document.getElementById('cartCounter');
+                        if(counterEl) {
+                            let current = parseInt(counterEl.innerText || 0);
+                            let nuevoTotal = current + cantidadActual;
+                            counterEl.innerText = nuevoTotal;
+                            localStorage.setItem('cart_count_cache', nuevoTotal);
+                        }
+
                         const btnTextOriginal = btnAdd.innerHTML;
                         btnAdd.innerHTML = '<i class="fa-solid fa-check"></i> ¡Agregado!';
-                        btnAdd.classList.replace('btn-concho', 'btn-success');
+                        btnAdd.classList.remove('btn-concho');
+                        btnAdd.classList.add('btn-success');
 
                         setTimeout(() => {
                             btnAdd.innerHTML = btnTextOriginal;
-                            btnAdd.classList.replace('btn-success', 'btn-concho');
+                            btnAdd.classList.remove('btn-success');
+                            btnAdd.classList.add('btn-concho');
                         }, 2000);
 
-                        // LLAMADA A LA API DE POSTGRESQL
-                        fetch('/api/carrito/agregar', { // <--- URL CORREGIDA
+                        fetch('/api/cart-add', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'Accept': 'application/json',
                                 'Authorization': `Bearer ${token}`
                             },
                             body: JSON.stringify({
                                 id_producto: btnAdd.getAttribute('data-id').trim(),
-                                cantidad: cantidadActual
-                                // Ya no enviamos nombre, precio ni imagen, el MODELO los obtiene por el ID
+                                nombre: btnAdd.getAttribute('data-nombre'),
+                                precio: btnAdd.getAttribute('data-precio'),
+                                cantidad: cantidadActual,
+                                imagen: "{{ !empty($productoVer->pro_imagen) ? asset('storage/' . $productoVer->pro_imagen) : 'https://placehold.co/100' }}"
                             })
                         })
-                            .then(async response => {
-                                const data = await response.json();
-                                if (response.ok) {
-                                    // Actualizar el contador del nav con el nuevo total que viene del servidor
-                                    // O simplemente recargar el contador llamando a la función del nav
-                                    fetchCart(); // Si tienes la función global
-                                } else {
-                                    alert(data.error || "Error al agregar");
+                            .then(response => {
+                                if (!response.ok) {
+                                    alert("Hubo un error guardando en el carrito. Por favor intenta de nuevo.");
+                                    if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual;
                                 }
                             })
-                            .catch(err => console.error("Error:", err));
+                            .catch(() => {
+                                if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual;
+                            });
                     });
-
                 }
             })();
         </script>
@@ -180,40 +201,35 @@
 
         <div class="row g-4">
 
-            {{-- SIDEBAR --}}
             <div class="col-12 col-lg-3">
                 @include('productos.buscar')
             </div>
 
-            {{-- GRID --}}
             <div class="col-12 col-lg-9">
 
-                {{-- Contenedor para reemplazo AJAX (ofertas + grid + paginación) --}}
                 <div id="productosContenido">
 
-                    {{-- ✅ SECCIÓN OFERTAS (PROMOS) --}}
                     @php
                         $catFiltro = request('categoria', request('id_categoria'));
                         $qFiltro   = request('q');
                         $umFiltro  = request('unidad_medida');
                         $ordFiltro = request('orden');
 
-                        // Categoría "Todas" la consideramos NO filtro
                         $catVal = strtolower(trim((string)($catFiltro ?? '')));
                         $catActivo = ($catVal !== '' && !in_array($catVal, ['0','all','todas','toda','*'], true));
 
-                        // Orden "por defecto" NO debe contar como filtro (normalmente id_asc)
                         $ordVal = strtolower(trim((string)($ordFiltro ?? '')));
-                        $ordenActivo = ($ordVal !== '' && !in_array($ordVal, ['id_asc','default'], true));
+                        $ordenActivo = ($ordVal !== '' && !in_array($ordVal, ['mix','id_asc','default'], true));
 
-                        // Unidad vacía o "todas" NO cuenta como filtro
                         $umVal = strtolower(trim((string)($umFiltro ?? '')));
                         $unidadActiva = ($umVal !== '' && !in_array($umVal, ['all','todas','toda','*'], true));
 
                         $hayFiltros = $catActivo || $ordenActivo || $unidadActiva || ($qFiltro !== null && trim($qFiltro) !== '');
+
+                        $enPrimeraPagina = isset($productos) && method_exists($productos, 'currentPage') ? ((int)$productos->currentPage() === 1) : ((int)request('page', 1) === 1);
                     @endphp
 
-                    @if(!$hayFiltros && isset($ofertas) && $ofertas && $ofertas->count() > 0)
+                    @if(!$hayFiltros && $enPrimeraPagina && isset($ofertas) && $ofertas && $ofertas->count() > 0)
                         <div id="ofertasSection" class="mb-4">
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <h5 class="mb-0 fw-bold">Ofertas destacadas</h5>
@@ -273,6 +289,7 @@
                             @php
                                 $img = !empty($p->pro_imagen) ? asset('storage/' . $p->pro_imagen) : 'https://placehold.co/600x450';
                                 $cat = $p->categoria?->cat_nombre ?? 'Sin categoría';
+                                $enStock = ((int)($p->pro_saldo_final ?? 0)) > 0;
                             @endphp
 
                             <div class="col-12 col-md-6 col-lg-4 producto-item"
@@ -282,9 +299,12 @@
                                         <img src="{{ $img }}" alt="Imagen {{ $p->pro_nombre }}">
                                     </div>
 
-                                    {{-- ✅ ETIQUETA DE OFERTA (si aplica) --}}
                                     @if($p->tieneDescuento())
                                         <span class="badge-oferta">{{ $p->etiquetaPromo() }}</span>
+                                    @endif
+
+                                    @if(!$enStock)
+                                        <span class="badge-agotado">Agotado</span>
                                     @endif
 
                                     <div class="p-3">
@@ -301,9 +321,10 @@
                                             ${{ number_format((float) $p->pro_precio_venta, 2) }}
                                         </div>
 
-                                        <a class="btn btn-concho product-btn"
-                                           href="{{ route('productos.index', ['view' => $p->id_producto]) }}">
-                                            Ver detalles
+                                        <a class="btn btn-concho product-btn {{ !$enStock ? 'disabled' : '' }}"
+                                           href="{{ $enStock ? route('productos.index', ['view' => $p->id_producto]) : 'javascript:void(0)' }}"
+                                            {{ !$enStock ? 'aria-disabled=true tabindex=-1' : '' }}>
+                                            {{ !$enStock ? 'No disponible' : 'Ver detalles' }}
                                         </a>
                                     </div>
                                 </div>
@@ -323,7 +344,7 @@
                         {{ $productos->links('pagination::bootstrap-4') }}
                     </div>
 
-                </div>{{-- /productosContenido --}}
+                </div>
 
             </div>
         </div>
@@ -340,19 +361,16 @@
                 function aplicar(){
                     const max = range ? parseFloat(range.value || '999999') : Infinity;
 
-                    // Recalcular SIEMPRE (porque el grid puede cambiar por AJAX)
                     const items = Array.from(document.querySelectorAll('.producto-item'));
                     items.forEach(el => {
                         const precio = parseFloat(el.getAttribute('data-precio') || '0');
                         el.style.display = (precio <= max) ? '' : 'none';
                     });
 
-                    // Label del slider
                     if(lbl && range){
                         lbl.textContent = 'Hasta $' + parseFloat(range.value || '0').toFixed(2);
                     }
 
-                    // Ocultar ofertas si el usuario movió el precio y restaurar al máximo
                     const ofertasSection = document.getElementById('ofertasSection');
                     if(ofertasSection && range && maxDefault !== null){
                         const sliderActual = parseFloat(range.value || '0');
@@ -361,7 +379,6 @@
                     }
                 }
 
-                // Exponer para el AJAX del buscador
                 window.applyPriceFilter = aplicar;
 
                 if(range) range.addEventListener('input', aplicar);

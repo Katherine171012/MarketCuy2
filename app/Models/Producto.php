@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\DB;
 
 class Producto extends Model
 {
-    protected $connection = 'pgsql';
-
     protected $table = 'productos';
     protected $primaryKey = 'id_producto';
     public $incrementing = false;
@@ -39,24 +37,27 @@ class Producto extends Model
         'pro_imagen',
     ];
 
-    // ✅ Promo/Oferta (si el trigger guardó un precio anterior mayor)
+    public function enStock(): bool
+    {
+        return ((int)($this->pro_saldo_final ?? 0)) > 0;
+    }
+
     public function tieneDescuento(): bool
     {
         return $this->pro_precio_antes !== null
             && $this->pro_precio_antes > $this->pro_precio_venta;
     }
 
-    // ✅ Etiqueta visible para el usuario (si no hay, usamos "Oferta")
     public function etiquetaPromo(): string
     {
         $t = trim((string) ($this->pro_etiqueta ?? ''));
         return $t !== '' ? $t : 'Oferta';
     }
 
-    // ✅ Para mostrar “Ofertas” en la sección productos
     public static function obtenerOfertas(int $limite = 6)
     {
         return self::where('estado_prod', 'ACT')
+            ->whereRaw('COALESCE(pro_saldo_final, 0) > 0')
             ->whereNotNull('pro_precio_antes')
             ->whereColumn('pro_precio_antes', '>', 'pro_precio_venta')
             ->with('categoria')
@@ -116,16 +117,27 @@ class Producto extends Model
             ->with('categoria');
     }
 
-    public static function obtenerParaLista(int $porPagina = 10)
+    private static function aplicarOrdenMix($query, string $seed)
     {
-        return self::query()
+        return $query->orderByRaw("md5(id_producto || ?)", [$seed]);
+    }
+
+    public static function obtenerParaLista(int $porPagina = 10, ?string $seed = null)
+    {
+        $q = self::query()
             ->with('categoria')
             ->orderByRaw("CASE
                 WHEN estado_prod = 'ACT' THEN 1
                 WHEN estado_prod = 'INA' THEN 2
-                ELSE 3 END")
-            ->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) ASC")
-            ->paginate($porPagina);
+                ELSE 3 END");
+
+        if ($seed) {
+            self::aplicarOrdenMix($q, $seed);
+        } else {
+            $q->orderByRaw("RANDOM()");
+        }
+
+        return $q->paginate($porPagina);
     }
 
     public static function paginarActivos(int $perPage = 10)
@@ -147,7 +159,8 @@ class Producto extends Model
         ?string $idCategoria,
         ?string $unidad,
         ?string $q,
-        int $perPage = 10
+        int $perPage = 10,
+        ?string $seed = null
     ) {
         $query = self::queryActivos();
 
@@ -164,21 +177,33 @@ class Producto extends Model
             $query->where('pro_um_compra', $unidad);
         }
 
-        $orden = ($orden !== null && $orden !== '') ? $orden : 'id_asc';
+        $orden = ($orden !== null && $orden !== '') ? $orden : 'mix';
 
         switch ($orden) {
+            case 'mix':
+                if ($seed) {
+                    self::aplicarOrdenMix($query, $seed);
+                } else {
+                    $query->orderByRaw("RANDOM()");
+                }
+                break;
+
             case 'id_asc':
                 $query->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) ASC");
                 break;
+
             case 'id_desc':
                 $query->orderByRaw("CAST(SUBSTRING(id_producto FROM 2) AS INTEGER) DESC");
                 break;
+
             case 'nombre_az':
                 $query->orderBy('pro_nombre', 'ASC');
                 break;
+
             case 'nombre_za':
                 $query->orderBy('pro_nombre', 'DESC');
                 break;
+
             default:
                 return null;
         }
