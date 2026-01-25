@@ -1,23 +1,23 @@
-
+/* public/css/login.css */
 body {
     background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop');
     background-size: cover;
     background-position: center;
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Segoe UI', sans-serif;
-    padding: 20px;
 }
 
-.register-card {
+.login-card {
     background-color: white;
     border-radius: 20px;
     overflow: hidden;
-    width: 100%;
-    max-width: 1000px;
+    width: 90%;
+    max-width: 900px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    min-height: 550px;
 }
 
 .left-panel {
@@ -34,29 +34,34 @@ body {
 }
 
 .icon-circle {
-    width: 70px; height: 70px;
+    width: 80px; height: 80px;
     border: 2px solid rgba(255,255,255,0.3);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 28px; margin-bottom: 20px;
+    font-size: 32px; margin-bottom: 20px;
     background: rgba(255,255,255,0.1);
 }
 
-.right-panel { padding: 40px; position: relative; }
-
-.close-btn {
-    position: absolute; top: 15px; right: 20px;
-    font-size: 24px; color: #999; text-decoration: none;
+.right-panel {
+    padding: 50px;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative;
 }
 
-.input-group-text { background: white; border-right: none; color: #888; }
-.form-control, .form-select { border-left: none; padding: 10px; font-size: 14px; }
+.close-btn {
+    position: absolute; top: 20px; right: 25px;
+    font-size: 24px; color: #999; text-decoration: none;
+}
+.close-btn:hover { color: #333; }
 
-/* Color Vino Focus */
+.input-group-text { background: white; border-right: none; color: #888; }
+.form-control { border-left: none; padding: 12px; font-size: 15px; }
+.form-control:focus { box-shadow: none; border-color: #ced4da; }
+
 .input-group:focus-within .input-group-text,
-.input-group:focus-within .form-control,
-.input-group:focus-within .form-select {
-    border-color: #660404; color: #660404;
+.input-group:focus-within .form-control {
+    border-color: #660404;
+    color: #660404;
 }
 
 .btn-concho {
@@ -66,34 +71,22 @@ body {
 }
 .btn-concho:hover { background-color: #4d0303; color: white; }
 
-.link-login { color: #660404; font-weight: 600; text-decoration: none; }
-label { font-size: 0.85rem; font-weight: 600; color: #666; margin-bottom: 4px; }
-/* Barra de fuerza de contraseña */
-.progress {
-    background-color: #e9ecef;
-    border-radius: 2px;
+.btn-outline {
+    border: 1px solid #ddd; color: #555;
+    padding: 10px; border-radius: 8px; width: 100%;
+    display: block; text-align: center; text-decoration: none;
+    font-weight: 600; font-size: 14px;
 }
-
-.bg-danger { background-color: #dc3545 !important; } /* Débil */
-.bg-warning { background-color: #ffc107 !important; } /* Medio */
-.bg-success { background-color: #198754 !important; } /* Fuerte */
-/* Quitar el ojo automático de Microsoft Edge que bloquea el clic */
+.btn-outline:hover { background-color: #f9f9f9; color: #000; }
 input::-ms-reveal,
 input::-ms-clear {
-    display: none !important;
+    display: none;
 }
-
-/* Unir el input con el ojito visualmente */
-.form-control.with-eye {
-    border-right: none !important;
-}
-
 .toggle-pass {
-    border-left: none !important;
-    background-color: white !important;
+    border-left: none;
     cursor: pointer;
+    background: white;
 }
-
-.toggle-pass i {
-    color: #660404 !important; /* Color vino MarketCuy */
+.form-control.with-eye {
+    border-right: none;
 }

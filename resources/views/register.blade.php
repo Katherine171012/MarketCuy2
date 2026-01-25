@@ -98,29 +98,35 @@
             </div>
 
             <!-- Contraseña -->
-            <div class="mb-3">
+            <div class="col-md-12 mb-3">
                 <label>Contraseña *</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
-                    <!-- Agregamos onkeyup para validar fuerza en tiempo real -->
-                    <input type="password" id="password" class="form-control" placeholder="Mínimo 8 caracteres" required onkeyup="validarPassword()">
+                    <!-- Agregamos la clase 'with-eye' y el estilo border-right: none -->
+                    <input type="password" id="password" class="form-control with-eye" placeholder="Mínimo 8 caracteres" required onkeyup="validarPassword()" style="border-right: none;">
+                    <!-- El ID debe ser btnToggle1 para que tu JS lo encuentre -->
+                    <span class="input-group-text toggle-pass" id="btnToggle1" style="cursor: pointer; background: white; border-left: none;">
+            <i class="fa-solid fa-eye" id="eyeIcon1" style="color: #660404;"></i>
+        </span>
                 </div>
-                <!-- Barra de fuerza -->
                 <div class="progress mt-1" style="height: 5px;">
-                    <div id="passwordStrength" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div id="passwordStrength" class="progress-bar" role="progressbar" style="width: 0%;"></div>
                 </div>
                 <small id="passwordHelp" class="text-muted" style="font-size: 0.75rem;">Debe tener números y mayúsculas.</small>
             </div>
-            <div class="mb-4">
+
+            <!-- Confirmar Contraseña -->
+            <div class="col-md-12 mb-4">
                 <label>Confirmar Contraseña *</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
-                    <!-- Agregamos onkeyup para verificar coincidencia -->
-                    <input type="password" id="password_confirmation" class="form-control" placeholder="Repite tu contraseña" required onkeyup="validarCoincidencia()">
-                    <div id="matchFeedback" class="invalid-feedback">
-                        Las contraseñas no coinciden.
-                    </div>
+                    <input type="password" id="password_confirmation" class="form-control with-eye" placeholder="Repite tu contraseña" required onkeyup="validarCoincidencia()" style="border-right: none;">
+                    <!-- El ID debe ser btnToggle2 -->
+                    <span class="input-group-text toggle-pass" id="btnToggle2" style="cursor: pointer; background: white; border-left: none;">
+            <i class="fa-solid fa-eye" id="eyeIcon2" style="color: #660404;"></i>
+        </span>
                 </div>
+                <div id="matchFeedback" class="invalid-feedback" style="display: none;">Las contraseñas no coinciden.</div>
             </div>
 
             <button type="submit" class="btn btn-concho mb-3" id="btnRegistro">
