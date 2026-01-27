@@ -9,28 +9,18 @@ use App\Models\Ciudad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
-    /**
-     * Obtener lista de ciudades para el formulario de registro
-     */
     public function getCiudades()
     {
-        // Asumiendo que la tabla ciudades tiene 'ciu_descripcion' o 'nombre'
-        // Ajusta el 'orderBy' según tu tabla Ciudad
         $ciudades = Ciudad::orderBy('id_ciudad', 'asc')->get();
         return response()->json($ciudades);
     }
 
-    /**
-     * Registro de usuarios (Crea Cliente + User)
-     */
     public function register(Request $request)
     {
-        // 1. Validaciones
         $request->validate([
             'identificacion' => 'required|string|max:13',
             'nombre'         => 'required|string|max:255',
@@ -38,25 +28,25 @@ class AuthController extends Controller
             'direccion'      => 'nullable|string',
             'telefono'       => 'nullable|string',
             'celular'        => 'nullable|string',
-            // CAMBIO EN PASSWORD:
+
             'password' => [
                 'required',
                 'string',
-                'confirmed', // <--- Esto busca automáticamente un campo llamado 'password_confirmation'
-                Password::min(8) // Mínimo 8
-                ->letters()  // Debe tener letras
-                ->numbers()  // Debe tener números
-                ->mixedCase() // Opcional: Mayúsculas y minúsculas
-                ->symbols()   // Opcional: Símbolos
+                'confirmed',
+                Password::min(8)
+                ->letters()
+                ->numbers()
+                ->mixedCase()
+                ->symbols()
             ],
-            // VALIDACIÓN DEL EMAIL
+
             'email'          => [
                 'required',
                 'string',
                 'email',
                 'max:255',
-                'unique:users,user_email', // Verifica que no exista en la columna user_email
-                'regex:/^.+@.+\..+$/i'     // <--- TU REGLA: Requiere @ y un punto con extensión
+                'unique:users,user_email',
+                'regex:/^.+@.+\..+$/i'
             ],
         ], [
             'email.regex'    => 'El correo debe tener un formato válido (ejemplo: nombre@dominio.com)',
@@ -64,16 +54,14 @@ class AuthController extends Controller
             'password.min'   => 'La contraseña debe tener al menos 8 caracteres.'
         ]);
 
-        // 2. Transacción en Base de Datos
+
         return DB::transaction(function () use ($request) {
 
-            // A. Buscar si el cliente ya existe (por RUC/Cédula) para no duplicarlo
             $cliente = Cliente::where('cli_ruc_ced', $request->identificacion)->first();
 
-            // B. Si NO existe, creamos el Cliente (Perfil de Negocio)
             if (!$cliente) {
                 $cliente = Cliente::create([
-                    'id_cliente'    => Cliente::generarSiguienteId(), // Tu método estático del modelo
+                    'id_cliente'    => Cliente::generarSiguienteId(),
                     'cli_nombre'    => $request->nombre,
                     'cli_ruc_ced'   => $request->identificacion,
                     'cli_mail'      => $request->email,
@@ -85,17 +73,15 @@ class AuthController extends Controller
                 ]);
             }
 
-            // C. Crear el Usuario (Credenciales de Acceso)
             $user = User::create([
-                'id_cliente'    => $cliente->id_cliente, // Vinculación FK
+                'id_cliente'    => $cliente->id_cliente,
                 'user_nombre'   => $request->nombre,
                 'user_email'    => $request->email,
-                'user_password' => Hash::make($request->password), // Encriptación
+                'user_password' => Hash::make($request->password),
                 'user_rol'      => 'customer',
                 'estado_user'   => 'ACT'
             ]);
 
-            // D. Generar Token de acceso inmediato
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
@@ -111,35 +97,32 @@ class AuthController extends Controller
         });
     }
 
-    /**
-     * Login de usuarios
-     */
     public function login(Request $request)
     {
-        // 1. Validar inputs
+        // Validar inputs
         $request->validate([
             'email'    => 'required|email',
             'password' => 'required'
         ]);
 
-        // 2. Buscar usuario por su email personalizado
+        // Buscar usuario por su email personalizado
         $user = User::where('user_email', $request->email)->first();
 
-        // 3. Verificar contraseña encriptada
+        // Verificar contraseña encriptada
         if (!$user || !Hash::check($request->password, $user->user_password)) {
             return response()->json([
                 'message' => 'Credenciales incorrectas'
             ], 401);
         }
 
-        // 4. Verificar estado (Opcional)
+        //  Verificar estado
         if ($user->estado_user !== 'ACT') {
             return response()->json([
                 'message' => 'Su cuenta se encuentra inactiva. Contacte al administrador.'
             ], 403);
         }
 
-        // 5. Generar Token (Elimina tokens anteriores si quieres sesión única)
+        // Generar Token
         $user->tokens()->delete();
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -156,9 +139,7 @@ class AuthController extends Controller
         ], 200);
     }
 
-    /**
-     * Logout (Cerrar sesión / Revocar token)
-     */
+
     public function logout(Request $request)
     {
         // Revoca el token actual que se usó para la petición

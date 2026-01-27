@@ -10,27 +10,23 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
-    <!-- TU CSS PERSONALIZADO -->
     <link rel="stylesheet" href="{{ asset('css/registro.css') }}">
 </head>
 <body>
 
 <div class="register-card row g-0">
-    <!-- LADO IZQUIERDO -->
     <div class="col-md-4 left-panel d-none d-md-flex">
         <div class="icon-circle"><i class="fa-solid fa-user-plus"></i></div>
         <h3 class="fw-bold">Únete a nosotros</h3>
         <p class="mt-2 opacity-75 small">Crea tu cuenta para acceder a las mejores ofertas.</p>
     </div>
 
-    <!-- LADO DERECHO (Formulario) -->
     <div class="col-md-8 right-panel">
         <a href="/" class="close-btn">&times;</a>
 
         <h3 class="fw-bold mb-1" style="color: #660404;">Crear Cuenta</h3>
         <p class="text-muted mb-4 small">Completa tus datos para registrarte</p>
 
-        <!-- Mensajes de Error -->
         <div id="alertError" class="alert alert-danger d-none small"></div>
 
         <form id="registerForm" novalidate>
@@ -97,14 +93,11 @@
                 </div>
             </div>
 
-            <!-- Contraseña -->
             <div class="col-md-12 mb-3">
                 <label>Contraseña *</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
-                    <!-- Agregamos la clase 'with-eye' y el estilo border-right: none -->
                     <input type="password" id="password" class="form-control with-eye" placeholder="Mínimo 8 caracteres" required onkeyup="validarPassword()" style="border-right: none;">
-                    <!-- El ID debe ser btnToggle1 para que tu JS lo encuentre -->
                     <span class="input-group-text toggle-pass" id="btnToggle1" style="cursor: pointer; background: white; border-left: none;">
             <i class="fa-solid fa-eye" id="eyeIcon1" style="color: #660404;"></i>
         </span>
@@ -115,14 +108,12 @@
                 <small id="passwordHelp" class="text-muted" style="font-size: 0.75rem;">Debe tener números y mayúsculas.</small>
             </div>
 
-            <!-- Confirmar Contraseña -->
             <div class="col-md-12 mb-4">
                 <label>Confirmar Contraseña *</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
                     <input type="password" id="password_confirmation" class="form-control with-eye" placeholder="Repite tu contraseña" required onkeyup="validarCoincidencia()" style="border-right: none;">
-                    <!-- El ID debe ser btnToggle2 -->
-                    <span class="input-group-text toggle-pass" id="btnToggle2" style="cursor: pointer; background: white; border-left: none;">
+                     <span class="input-group-text toggle-pass" id="btnToggle2" style="cursor: pointer; background: white; border-left: none;">
             <i class="fa-solid fa-eye" id="eyeIcon2" style="color: #660404;"></i>
         </span>
                 </div>
@@ -140,7 +131,6 @@
     </div>
 </div>
 
-<!-- TU JS PERSONALIZADO -->
 <script src="{{ asset('js/registro.js') }}"></script>
 
 </body>

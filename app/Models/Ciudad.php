@@ -11,7 +11,6 @@ class Ciudad extends Model
     protected $primaryKey = 'id_ciudad';
     public $incrementing = false;
     protected $keyType = 'string';
-    public $timestamps = false; // Excelente, las tablas legacy suelen no tener esto
-
+    public $timestamps = false;
     protected $fillable = ['id_ciudad', 'ciu_descripcion'];
 }
