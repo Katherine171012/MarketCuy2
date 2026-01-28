@@ -9,7 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
-    {{-- CSS GLOBAL (para todo: home, productos, contacto, etc.) --}}
+    {{-- CSS GLOBAL --}}
     <link rel="stylesheet" href="{{ asset('css/productos.css') }}">
 
     {{-- Alpine.js para componentes reactivos --}}
@@ -46,7 +46,6 @@
 
 <body class="{{ implode(' ', $clasesBody) }}">
 
-    {{-- ================= NAVBAR (GLOBAL) ================= --}}
     <nav class="navbar navbar-expand-lg shop-nav sticky-top py-3">
         <div class="container">
             <a class="shop-brand" href="{{ $homeUrl }}">
@@ -83,15 +82,13 @@
 
                 <div class="d-flex align-items-center gap-3">
 
-                    {{-- A) PARA INVITADOS (NO LOGUEADOS) --}}
                     <div id="menuGuest" class="d-flex align-items-center gap-3">
                         <a href="{{ url('/login') }}" class="btn btn-concho px-4">Iniciar sesión</a>
                     </div>
 
-                    {{-- B) PARA USUARIOS (LOGUEADOS) --}}
+
                     <div id="menuAuth" class="d-none align-items-center gap-3">
 
-                        {{-- Botón Carrito con Contador Real --}}
                         <a href="{{ route('cart.index') }}" class="btn btn-light border position-relative text-dark">
                             <i class="fa-solid fa-cart-shopping"></i>
                             <span id="cartCounter"
@@ -100,7 +97,7 @@
                             </span>
                         </a>
 
-                        <div class="vr mx-2"></div> {{-- Línea separadora vertical --}}
+                        <div class="vr mx-2"></div>
 
                         <span class="small fw-bold text-secondary">
                             Hola, <span id="navUserName">Usuario</span>
@@ -116,8 +113,7 @@
         </div>
     </nav>
 
-    {{-- ================= HERO SOLO PRODUCTOS ================= --}}
-    @if($esProductos)
+     @if($esProductos)
         <div class="shop-hero">
             <div class="container">
                 <h1 class="hero-title mb-0">Nuestros<br>Productos</h1>
@@ -125,7 +121,6 @@
         </div>
     @endif
 
-    {{-- ================= CONTENIDO ================= --}}
     <main class="{{ $esProductos ? 'shop-shell' : '' }}">
         @yield('contenido')
         @yield('content')
@@ -194,8 +189,6 @@
             const nameSpan = document.getElementById('navUserName');
             const counterEl = document.getElementById('cartCounter');
 
-            // --- PASO 1: CARGA INSTANTÁNEA (OPTIMISTA) ---
-            // Leemos lo que guardamos la última vez para no esperar al servidor
             const cachedName = localStorage.getItem('user_name_cache');
             const cachedCart = localStorage.getItem('cart_count_cache');
 
@@ -203,16 +196,10 @@
                 if (menuGuest) menuGuest.classList.add('d-none');
                 if (menuAuth) menuAuth.classList.remove('d-none');
 
-                // Si tenemos el nombre en cache, lo ponemos YA
                 if (cachedName && nameSpan) nameSpan.innerText = cachedName;
-                // Si tenemos el conteo en cache, lo ponemos YA
                 if (cachedCart && counterEl) counterEl.innerText = cachedCart;
 
-                // --- PASO 2: ACTUALIZACIÓN EN SILENCIO (BACKGROUND) ---
-                // Solo pedimos al servidor para verificar si algo cambió, pero el usuario ya ve sus datos
-
-                // Pedir datos de usuario
-                fetch('/api/user', {
+                  fetch('/api/user', {
                     headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
                 })
                     .then(res => res.json())
@@ -225,7 +212,6 @@
                     })
                     .catch(err => { if (err.status === 401) logout(); });
 
-                // Pedir datos del carrito
                 fetch('/api/carrito', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
@@ -235,8 +221,6 @@
                             let totalQty = 0;
                             Object.values(data.items).forEach(item => totalQty += item.cantidad);
 
-                            // SOLO actualizamos si el número de la API es diferente al que ya tenemos
-                            // o si el usuario no ha hecho clic recientemente.
                             const counterEl = document.getElementById('cartCounter');
                             if (counterEl) {
                                 counterEl.innerText = totalQty;
@@ -253,13 +237,12 @@
 
         function logout() {
             localStorage.removeItem('auth_token');
-            localStorage.removeItem('user_name_cache'); // Limpiar cache
-            localStorage.removeItem('cart_count_cache'); // Limpiar cache
+            localStorage.removeItem('user_name_cache');
+            localStorage.removeItem('cart_count_cache');
             window.location.href = '/';
         }
 
         // ============ FUNCIÓN GLOBAL PARA ACTUALIZAR EL CONTADOR DEL CARRITO ============
-        // Esta función puede ser llamada desde CUALQUIER PÁGINA después de agregar un producto
         function fetchCart() {
             const token = localStorage.getItem('auth_token');
             if (!token) return;

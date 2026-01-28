@@ -78,7 +78,8 @@
                                 ${{ number_format((float) $productoVer->pro_precio_venta, 2) }}
                             </div>
 
-                            <div class="small text-muted mt-1">
+                            <!-- Stock oculto -->
+                            <div class="d-none">
                                 Stock: <span class="fw-bold">{{ (int)($productoVer->pro_saldo_final ?? 0) }}</span>
                             </div>
                         </div>
@@ -134,64 +135,139 @@
                 if(enStock){
                     if(minus) minus.addEventListener('click', () => { clamp(); qty.value = Math.max(1, parseInt(qty.value,10)-1); });
                     if(plus)  plus.addEventListener('click',  () => { clamp(); qty.value = parseInt(qty.value,10)+1; });
-                    if(qty)   qty.addEventListener('input', clamp);
+                    
+                    if(qty) {
+                        // Validación estricta solo números ENTEROS (sin puntos)
+                        qty.addEventListener('keydown', (e) => {
+                             // Permitir: borrado, tab, flechas, inicio, fin, ctrl+a
+                             // Se eliminaron 110 y 190 (puntos decimales)
+                            if ([46, 8, 9, 27, 13, 35, 36, 37, 39].indexOf(e.keyCode) !== -1 ||
+                                (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true))) {
+                                return;
+                            }
+                            // Permitir números del teclado principal y numpad
+                            if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                                e.preventDefault();
+                            }
+                        });
+
+                        qty.addEventListener('blur', clamp);
+                        qty.addEventListener('change', clamp);
+                    }
                 }
 
                 const btnAdd = document.getElementById('btnAddCarrito');
                 if(btnAdd){
-                    btnAdd.addEventListener('click', () => {
+                    btnAdd.addEventListener('click', async () => {
                         if(!enStock) return;
 
-                        const token = localStorage.getItem('auth_token');
+                        const stockMax = parseInt("{{ (int)($productoVer->pro_saldo_final ?? 0) }}");
                         const cantidadActual = clamp();
+                        
+                        // Validación bonita de stock excedido
+                        if(cantidadActual > stockMax) {
+                            const msg = `No hay suficientes unidades para la cantidad solicitada`;
+                            
+                            // Función helper para toast si no existe
+                            const showToast = (message, type = 'danger') => {
+                                let container = document.getElementById('toast-container-global');
+                                if (!container) {
+                                    container = document.createElement('div');
+                                    container.id = 'toast-container-global';
+                                    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+                                    container.style.zIndex = '9999';
+                                    document.body.appendChild(container);
+                                }
+
+                                const toastHtml = `
+                                    <div class="toast show align-items-center text-white bg-${type} border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                                        <div class="d-flex">
+                                            <div class="toast-body fs-6 fw-semibold">
+                                                <i class="fa-solid fa-circle-exclamation me-2"></i> ${message}
+                                            </div>
+                                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                const toastEl = document.createElement('div');
+                                toastEl.innerHTML = toastHtml;
+                                const toastNode = toastEl.firstElementChild;
+                                container.appendChild(toastNode);
+                                
+                                setTimeout(() => {
+                                    toastNode.classList.remove('show');
+                                    setTimeout(() => toastNode.remove(), 300);
+                                }, 3000);
+                            };
+
+                            showToast(msg, 'danger');
+                            qty.value = stockMax; // Ajustar al máximo
+                            return;
+                        }
+
+                        const token = localStorage.getItem('auth_token');
 
                         if(!token){
                             window.location.href = "/login";
                             return;
                         }
 
-                        const counterEl = document.getElementById('cartCounter');
-                        if(counterEl) {
-                            let current = parseInt(counterEl.innerText || 0);
-                            let nuevoTotal = current + cantidadActual;
-                            counterEl.innerText = nuevoTotal;
-                            localStorage.setItem('cart_count_cache', nuevoTotal);
-                        }
-
+                        // Deshabilitar botón temporalmente
                         const btnTextOriginal = btnAdd.innerHTML;
-                        btnAdd.innerHTML = '<i class="fa-solid fa-check"></i> ¡Agregado!';
-                        btnAdd.classList.remove('btn-concho');
-                        btnAdd.classList.add('btn-success');
+                        btnAdd.disabled = true;
+                        btnAdd.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Agregando...';
 
-                        setTimeout(() => {
-                            btnAdd.innerHTML = btnTextOriginal;
-                            btnAdd.classList.remove('btn-success');
-                            btnAdd.classList.add('btn-concho');
-                        }, 2000);
-
-                        fetch('/api/cart-add', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify({
-                                id_producto: btnAdd.getAttribute('data-id').trim(),
-                                nombre: btnAdd.getAttribute('data-nombre'),
-                                precio: btnAdd.getAttribute('data-precio'),
-                                cantidad: cantidadActual,
-                                imagen: "{{ !empty($productoVer->pro_imagen) ? asset('images/' . $productoVer->pro_imagen) : 'https://placehold.co/100' }}"
-                            })
-                        })
-                            .then(response => {
-                                if (!response.ok) {
-                                    alert("Hubo un error guardando en el carrito. Por favor intenta de nuevo.");
-                                    if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual;
-                                }
-                            })
-                            .catch(() => {
-                                if(counterEl) counterEl.innerText = parseInt(counterEl.innerText) - cantidadActual;
+                        try {
+                            const response = await fetch('/api/carrito/agregar', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`,
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    id_producto: btnAdd.getAttribute('data-id').trim(),
+                                    cantidad: cantidadActual
+                                })
                             });
+
+                            const data = await response.json();
+
+                            if (response.ok) {
+                                // Actualizar contador del navbar
+                                const counterEl = document.getElementById('cartCounter');
+                                if(counterEl) {
+                                    let current = parseInt(counterEl.innerText || 0);
+                                    let nuevoTotal = current + cantidadActual;
+                                    counterEl.innerText = nuevoTotal;
+                                    counterEl.style.display = nuevoTotal > 0 ? 'block' : 'none';
+                                    localStorage.setItem('cart_count_cache', nuevoTotal);
+                                }
+
+                                // Mostrar éxito
+                                btnAdd.innerHTML = '<i class="fa-solid fa-check"></i> ¡Agregado!';
+                                btnAdd.classList.remove('btn-concho');
+                                btnAdd.classList.add('btn-success');
+
+                                setTimeout(() => {
+                                    btnAdd.innerHTML = btnTextOriginal;
+                                    btnAdd.classList.remove('btn-success');
+                                    btnAdd.classList.add('btn-concho');
+                                    btnAdd.disabled = false;
+                                }, 2000);
+                            } else {
+                                // Mostrar error del servidor
+                                alert(data.error || "No se pudo agregar el producto al carrito");
+                                btnAdd.innerHTML = btnTextOriginal;
+                                btnAdd.disabled = false;
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert("Error de conexión. Por favor intenta de nuevo.");
+                            btnAdd.innerHTML = btnTextOriginal;
+                            btnAdd.disabled = false;
+                        }
                     });
                 }
             })();
@@ -348,7 +424,7 @@
 
             </div>
         </div>
-        /* ====== funcion ====== */
+        <!-- Scripts de funcionalidad -->
         <script>
             (function(){
                 const range = document.getElementById('rangePrecio');

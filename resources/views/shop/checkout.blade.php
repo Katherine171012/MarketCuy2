@@ -159,19 +159,19 @@
                 subtotal += subItem;
 
                 const imgUrl = prod.pro_imagen
-                    ? `/storage/${prod.pro_imagen}`
+                    ? `/images/${prod.pro_imagen}`
                     : 'https://placehold.co/50';
 
                 html += `
-                <div class="d-flex align-items-center mb-3 border-bottom pb-2">
-                    <img src="${imgUrl}" class="rounded me-2" width="50" height="50" style="object-fit: contain;">
-                    <div class="flex-grow-1 lh-1">
-                        <small class="fw-bold d-block text-truncate" style="max-width: 150px;">${prod.pro_nombre}</small>
-                        <small class="text-muted">x${item.cantidad}</small>
+                    <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                        <img src="${imgUrl}" class="rounded me-2" width="50" height="50" style="object-fit: contain;">
+                        <div class="flex-grow-1 lh-1">
+                            <small class="fw-bold d-block text-truncate" style="max-width: 150px;">${prod.pro_nombre}</small>
+                            <small class="text-muted">x${item.cantidad}</small>
+                        </div>
+                        <span class="fw-bold small">$${subItem.toFixed(2)}</span>
                     </div>
-                    <span class="fw-bold small">$${subItem.toFixed(2)}</span>
-                </div>
-            `;
+                `;
             });
 
             const iva = subtotal * 0.15;
