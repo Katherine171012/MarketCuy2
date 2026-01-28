@@ -24,17 +24,17 @@
                          class="img-fluid rounded-4 shadow-sm">
                 </div>
                 <div class="col-12 col-lg-7">
-                    <h2 class="fw-bold text-concho mb-3">De grupo random a familia cuy</h2>
+                    <h2 class="fw-bold text-concho mb-3">Nuestro origen</h2>
                     <p class="text-muted fs-5 mb-3 text-justify" style="text-align: justify;">
-                        Todo empezó con un proyecto en grupo. Nos juntamos porque éramos la misma cosa: cuatro cuys con vibras parecidas pero personalidades totalmente diferentes.
+                        MarketCuy nació como un proyecto académico que reunió a cuatro estudiantes con visiones complementarias y un objetivo común: transformar la experiencia de compra de supermercado.
                     </p>
                     <p class="text-muted fs-5 mb-3 text-justify" style="text-align: justify;">
-                        Entre discusiones, dramas y peleas que parecían el fin del mundo (pero eran por tonterías), descubrimos algo: cada uno tenía su chispa. Y que juntos, éramos imparables (bueno, casi).
+                        A través del trabajo colaborativo y la integración de nuestras habilidades individuales, desarrollamos una plataforma que responde a las necesidades reales del consumidor moderno.
                     </p>
                     <p class="text-muted fs-5 mb-0 text-justify" style="text-align: justify;">
-                        Al final del proyecto, decidimos quedarnos como equipo para siempre.
+                        La sinergia del equipo y el compromiso compartido nos llevó a consolidar este proyecto más allá del ámbito académico.
                         <br><br>
-                        Así nació <strong class="text-concho">MarketCuy</strong>: cuatro cuys que aprendieron que los mejores equipos no se arman... se construyen a base de paciencia, risas y amor.
+                        Así nació <strong class="text-concho">MarketCuy</strong>: una plataforma de e-commerce desarrollada con dedicación, innovación y enfoque en la excelencia del servicio.
                     </p>
                 </div>
             </div>
@@ -42,22 +42,22 @@
 
         {{-- QUÉ ES MARKETCUY --}}
         <div class="mt-4 p-4 p-lg-5 bg-white border rounded-4 shadow-sm text-center">
-            <h2 class="fw-bold text-concho mb-4">¿Y qué es MarketCuy?</h2>
+            <h2 class="fw-bold text-concho mb-4">¿Qué es MarketCuy?</h2>
             <div class="mx-auto" style="max-width: 800px;">
                 <p class="text-muted fs-5 mb-3">
-                    Un e-commerce de supermercado hecho por cuys, para humanos que odian hacer fila.
+                    Una plataforma de comercio electrónico especializada en productos de supermercado, diseñada para optimizar la experiencia de compra del usuario.
                 </p>
                 <p class="text-muted fs-5 mb-3">
-                    Somos cuatro programadores que dijimos: "¿Y si hacer mercado fuera tan fácil como pedir pizza?"
+                    Nuestro equipo de desarrollo identificó una oportunidad en el mercado: simplificar el proceso de compra de productos de consumo diario mediante tecnología intuitiva y eficiente.
                 </p>
                 <p class="text-muted fs-5 mb-4">
-                    Aquí no hay pasillos confusos ni productos escondidos. Solo categorías claras, entregas puntuales, y un equipo que revisa cada pedido como si fuera para su mamá.
+                    Ofrecemos una interfaz organizada, categorización clara de productos, sistema de entregas confiable y un proceso de verificación de calidad riguroso en cada pedido.
                 </p>
                 <p class="fs-5 fw-semibold text-concho mb-0">
-                     <em>Nuestro lema:</em> "Si un cuy puede organizarse, tú también" (pero con nuestra ayuda)
+                    <em>Nuestro principio:</em> "Tecnología al servicio de la comodidad del usuario"
                 </p>
                 <p class="text-muted small mt-3 mb-0">
-                    Porque sí, somos cuys. Pero somos cuys comprometidos.
+                    Comprometidos con la innovación y la satisfacción del cliente.
                 </p>
             </div>
         </div>
@@ -71,7 +71,7 @@
                     </div>
                     <h4 class="fw-bold">Misión</h4>
                     <p class="text-muted small mb-0">
-                        Brindar una experiencia de compra online eficiente, segura y accesible, conectando productos de calidad con tu hogar.
+                        Facilitar el acceso a productos de supermercado mediante una plataforma digital eficiente, segura y accesible, garantizando calidad y puntualidad en cada entrega.
                     </p>
                 </div>
             </div>
@@ -83,7 +83,7 @@
                     </div>
                     <h4 class="fw-bold">Visión</h4>
                     <p class="text-muted small mb-0">
-                        Ser una plataforma referente de supermercado online por confianza, servicio y mejora continua.
+                        Posicionarnos como una plataforma de referencia en e-commerce de supermercado, reconocida por la confianza, innovación tecnológica y excelencia en el servicio al cliente.
                     </p>
                 </div>
             </div>
@@ -98,7 +98,8 @@
                         <li>Calidad y frescura</li>
                         <li>Transparencia</li>
                         <li>Responsabilidad</li>
-                        <li>Atención al cliente</li>
+                        <li>Excelencia en atención al cliente</li>
+                        <li>Innovación continua</li>
                     </ul>
                 </div>
             </div>
@@ -109,17 +110,17 @@
             <h2 class="fw-bold text-concho mb-3 text-center">Nuestro compromiso</h2>
             <div class="mx-auto" style="max-width: 700px;">
                 <p class="text-muted fs-5 mb-0 text-center">
-                    Entre peleas y risas, nos ponemos serios con una cosa: tu pedido. Lo revisamos todo, empacamos con cuidado, y nos aseguramos de que llegue completo.
+                    Implementamos un riguroso control de calidad en cada etapa del proceso: verificación de productos, empaquetado cuidadoso y supervisión de entregas.
                     <br><br>
-                    Porque si algo sale mal, Kathe nos regaña a todos
+                    Nuestro equipo está comprometido con garantizar la satisfacción total del cliente en cada pedido.
                 </p>
             </div>
         </div>
 
         {{-- EL EQUIPO CUY --}}
         <div class="mt-5 text-center">
-            <h2 class="fw-bold text-concho mb-2">Conoce a los cuys detrás del teclado</h2>
-            <p class="text-muted mb-5">Cuatro personalidades, un caos funcional</p>
+            <h2 class="fw-bold text-concho mb-2">Nuestro equipo</h2>
+            <p class="text-muted mb-5">Profesionales comprometidos con la excelencia</p>
 
             <div class="row g-4">
                 {{-- Kathe --}}
@@ -129,10 +130,10 @@
                              alt="Kathe"
                              class="rounded-circle mb-3 mx-auto d-block"
                              style="width: 150px; height: 150px; object-fit: cover;">
-                        <h5 class="fw-bold mb-1">Kathe</h5>
-                        <p class="text-muted small fst-italic mb-2">"Líder del Grupo"</p>
+                        <h5 class="fw-bold mb-1">Katherine</h5>
+                        <p class="text-muted small fst-italic mb-2">Coordinadora de Proyecto</p>
                         <p class="text-muted small mb-0">
-                            Sin ella, no seríamos nada. Literalmente no funcionaríamos. Es la única tranquila del grupo y nos tiene una paciencia que nadie más tendría. Ella nos sostiene.
+                            Responsable de la gestión y coordinación del equipo. Su liderazgo organizado y capacidad de mediación son fundamentales para el funcionamiento eficiente del proyecto.
                         </p>
                     </div>
                 </div>
@@ -144,10 +145,10 @@
                              alt="Will"
                              class="rounded-circle mb-3 mx-auto d-block"
                              style="width: 150px; height: 150px; object-fit: cover;">
-                        <h5 class="fw-bold mb-1">Will</h5>
-                        <p class="text-muted small fst-italic mb-2">"Patico"</p>
+                        <h5 class="fw-bold mb-1">William</h5>
+                        <p class="text-muted small fst-italic mb-2">Desarrollador Full Stack</p>
                         <p class="text-muted small mb-0">
-                            No pelea, puro chiste. El que hace alegría al grupo y siempre sale con huevadas. Si hay tensión, Will la rompe con algo random. Energía positiva 24/7.
+                            Especialista en desarrollo de interfaces y experiencia de usuario. Aporta soluciones creativas y mantiene un ambiente de trabajo colaborativo y productivo.
                         </p>
                     </div>
                 </div>
@@ -159,10 +160,10 @@
                              alt="Mathi"
                              class="rounded-circle mb-3 mx-auto d-block"
                              style="width: 150px; height: 150px; object-fit: cover;">
-                        <h5 class="fw-bold mb-1">Mathi</h5>
-                        <p class="text-muted small fst-italic mb-2">"Sopa"</p>
+                        <h5 class="fw-bold mb-1">Mathias</h5>
+                        <p class="text-muted small fst-italic mb-2">Desarrollador Backend</p>
                         <p class="text-muted small mb-0">
-                            El que nunca se calla, nunca se queda quieto y siempre está peleando. Caos puro, pero cuando se pone a trabajar, lo hace bien. Funcional a su manera.
+                            Enfocado en la arquitectura del sistema y funcionalidades del servidor. Su enfoque dinámico y proactivo impulsa la resolución eficiente de desafíos técnicos.
                         </p>
                     </div>
                 </div>
@@ -175,9 +176,9 @@
                              class="rounded-circle mb-3 mx-auto d-block"
                              style="width: 150px; height: 150px; object-fit: cover;">
                         <h5 class="fw-bold mb-1">Flores</h5>
-                        <p class="text-muted small fst-italic mb-2">"Varón"</p>
+                        <p class="text-muted small fst-italic mb-2">Desarrollador Frontend</p>
                         <p class="text-muted small mb-0">
-                            Siempre con un chiste o una huevada lista. Con Mathi en las peleas, con Will en las risas. La que mantiene la vibra ligera cuando el grupo se pone denso.
+                            Especialista en diseño e implementación de componentes visuales. Contribuye al equilibrio del equipo con versatilidad técnica y capacidad de adaptación.
                         </p>
                     </div>
                 </div>
